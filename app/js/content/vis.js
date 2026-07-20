@@ -141,8 +141,8 @@ export function angleDiagram(deg, { label = '?' } = {}) {
     <text x="${cx + 34}" y="${cy - 10 - (deg > 120 ? 14 : 0)}" font-size="13" fill="#b91c1c" font-weight="700">${label}</text></svg>`;
 }
 
-// First-quadrant coordinate grid with optional points and polygon.
-export function coordGrid(size, points = [], { poly = false } = {}) {
+// First-quadrant coordinate grid with optional points, polygon, and mirror line.
+export function coordGrid(size, points = [], { poly = false, vline = null } = {}) {
   const cell = 200 / size, W = 250, H = 240;
   let grid = '';
   for (let i = 0; i <= size; i++) {
@@ -153,6 +153,10 @@ export function coordGrid(size, points = [], { poly = false } = {}) {
   }
   const X = (p) => 30 + p[0] * cell, Y = (p) => 10 + (size - p[1]) * cell;
   let marks = '';
+  if (vline != null) {
+    marks += `<line x1="${30 + vline * cell}" y1="10" x2="${30 + vline * cell}" y2="${10 + size * cell}"
+      stroke="#dc2626" stroke-width="2" stroke-dasharray="6 4"/>`;
+  }
   if (poly && points.length > 1) {
     marks += `<polygon points="${points.map((p) => `${X(p)},${Y(p)}`).join(' ')}" fill="#bae6fd88" stroke="#0369a1" stroke-width="2"/>`;
   }
@@ -183,6 +187,31 @@ export function barChart(labels, values, { unit = '' } = {}) {
     <line x1="${x0}" y1="${y0}" x2="${W - 10}" y2="${y0}" stroke="#334155" stroke-width="2"/>
     <line x1="${x0}" y1="${y0}" x2="${x0}" y2="14" stroke="#334155" stroke-width="2"/>
     ${unit ? `<text x="10" y="10" font-size="10">${unit}</text>` : ''}</svg>`;
+}
+
+// Line graph for statistics questions: labels on x, values joined by a line.
+export function lineGraph(labels, values, { unit = '' } = {}) {
+  const W = 320, H = 180, x0 = 40, y0 = 140, span = W - x0 - 16;
+  const max = Math.max(...values);
+  const scale = niceScale(max);
+  const X = (i) => x0 + (labels.length === 1 ? 0 : (i / (labels.length - 1)) * span);
+  const Y = (v) => y0 - (v / scale.max) * 120;
+  let axis = '';
+  for (let v = 0; v <= scale.max + 1e-9; v += scale.step) {
+    axis += `<line x1="${x0}" y1="${Y(v)}" x2="${W - 10}" y2="${Y(v)}" stroke="#e2e8f0"/>
+      <text x="${x0 - 6}" y="${Y(v) + 4}" text-anchor="end" font-size="10">${v}</text>`;
+  }
+  const path = values.map((v, i) => `${i ? 'L' : 'M'}${X(i)},${Y(v)}`).join(' ');
+  let pts = '', xlab = '';
+  values.forEach((v, i) => {
+    pts += `<circle cx="${X(i)}" cy="${Y(v)}" r="4" fill="#0369a1"/>`;
+    xlab += `<text x="${X(i)}" y="${y0 + 16}" text-anchor="middle" font-size="10">${labels[i]}</text>`;
+  });
+  return `<svg ${NS} viewBox="0 0 ${W} ${H}">${axis}
+    <path d="${path}" fill="none" stroke="#0ea5e9" stroke-width="2.5"/>${pts}${xlab}
+    <line x1="${x0}" y1="${y0}" x2="${W - 10}" y2="${y0}" stroke="#334155" stroke-width="2"/>
+    <line x1="${x0}" y1="${y0}" x2="${x0}" y2="14" stroke="#334155" stroke-width="2"/>
+    ${unit ? `<text x="8" y="10" font-size="10">${unit}</text>` : ''}</svg>`;
 }
 
 // Table for two-way table questions.
