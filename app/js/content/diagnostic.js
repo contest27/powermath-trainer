@@ -64,7 +64,9 @@ export function diagnosticItems(rng) {
   }
   {
     const d = pick(rng, [5, 7, 9]), a = ri(rng, 1, d - 3), b = ri(rng, 1, d - a - 1);
-    const opts = [fr(a + b, d), fr(a + b, d * 2), fr(a * b, d), fr(a + b + 1, d)];
+    const cands = [fr(a + b, d * 2), fr(a * b, d), fr(a + b + 1, d), fr(Math.max(1, a + b - 1), d), fr(a + b, d + 1)];
+    const opts = [fr(a + b, d)];
+    for (const c of cands) if (!opts.includes(c) && opts.length < 4) opts.push(c);
     add('fractions', mc(`Work out ${fr(a, d)} + ${fr(b, d)}`, opts, 0, { tier: 1 }));
   }
   {

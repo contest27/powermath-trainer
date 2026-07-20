@@ -7,7 +7,9 @@ import './ui/parent.js';
 mount(document.getElementById('root'));
 go('today');
 
-// Offline support once served over http(s); no-op when opened from disk.
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+// Offline support once served over http(s). Skipped on localhost so local
+// development and the test runner always see fresh files.
+const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
+if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !isLocal) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
 }

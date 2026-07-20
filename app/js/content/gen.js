@@ -13,11 +13,18 @@ export function mc(prompt, options, answerIndex, { tier = 2, svg = '', hint = ''
 }
 
 // Build an MC from a correct value and distractors, shuffled deterministically.
+// Distractors equal to the answer or to each other are dropped.
 export function mcFrom(rng, prompt, correct, distractors, opts = {}) {
-  const all = [correct, ...distractors.filter((d) => String(d) !== String(correct)).slice(0, 3)];
-  const options = shuffle(rng, all.map((v) => (typeof v === 'number' ? fmt(v) : String(v))));
-  const answerIndex = options.indexOf(typeof correct === 'number' ? fmt(correct) : String(correct));
-  return mc(prompt, options, answerIndex, opts);
+  const asStr = (v) => (typeof v === 'number' ? fmt(v) : String(v));
+  const cStr = asStr(correct);
+  const seen = new Set([cStr]);
+  const ds = [];
+  for (const d of distractors) {
+    const s = asStr(d);
+    if (!seen.has(s) && ds.length < 3) { seen.add(s); ds.push(s); }
+  }
+  const options = shuffle(rng, [cStr, ...ds]);
+  return mc(prompt, options, options.indexOf(cStr), opts);
 }
 
 export function tf(prompt, answer, { tier = 1, svg = '', hint = '', explain = '' } = {}) {

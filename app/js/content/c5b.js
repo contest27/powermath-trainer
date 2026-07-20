@@ -373,7 +373,10 @@ export const topics5b = [
         const top = w * d + r;
         if (rng() < 0.5) {
           const correct = mixed(w, r, d);
-          const options = shuffle(rng, [correct, mixed(w + 1, r, d), mixed(w, Math.min(d - 1, r + 1), d), mixed(r, w, d)]);
+          const cands = [mixed(w + 1, r, d), mixed(w, r === d - 1 ? r - 1 : r + 1, d), mixed(r, w, d), mixed(w + 2, r, d)];
+          const pool = [correct];
+          for (const c of cands) if (!pool.includes(c) && pool.length < 4) pool.push(c);
+          const options = shuffle(rng, pool);
           return mc(`Write ${fr(top, d)} as a mixed number.`, options, options.indexOf(correct), {
             tier, svg: fracCircle(Math.min(top, d), d) + (top > d ? fracCircle(top - d, d) : ''),
             hint: `How many groups of ${d} fit into ${top}?`,
@@ -562,7 +565,10 @@ export const topics5b = [
           const n1 = ri(rng, 1, d - 1), n2 = ri(rng, 1, d - n1) - 0;
           if (n1 + n2 >= d) return this.gen(rng, tier);
           const correct = mixed(w1 + w2, n1 + n2, d);
-          const options = shuffle(rng, [correct, mixed(w1 + w2 + 1, n1 + n2, d), mixed(w1 + w2, Math.min(d - 1, n1 + n2 + 1), d), mixed(w1 + w2 - 1, n1 + n2, d)]);
+          const cands = [mixed(w1 + w2 + 1, n1 + n2, d), mixed(w1 + w2, n1 + n2 === d - 1 ? n1 + n2 - 1 : n1 + n2 + 1, d), mixed(Math.max(1, w1 + w2 - 1), n1 + n2, d)];
+          const pool = [correct];
+          for (const c of cands) if (!pool.includes(c) && pool.length < 4) pool.push(c);
+          const options = shuffle(rng, pool);
           return mc(`Work out ${mixed(w1, n1, d)} + ${mixed(w2, n2, d)}`, options, options.indexOf(correct), {
             tier, hint: 'Wholes with wholes, fractions with fractions.',
             explain: `${w1} + ${w2} = ${w1 + w2} and ${fr(n1, d)} + ${fr(n2, d)} = ${fr(n1 + n2, d)}.`,
@@ -652,10 +658,14 @@ export const topics5b = [
         const topTotal = (w * d + n) * k;
         const wholes = Math.floor(topTotal / d), rem = topTotal % d;
         const correct = rem === 0 ? String(wholes) : mixed(wholes, rem, d);
-        const opts = shuffle(rng, [correct,
+        const cands = [
           rem === 0 ? String(wholes + 1) : mixed(wholes + 1, rem, d),
           mixed(Math.max(1, wholes - 1), rem === 0 ? 1 : rem, d),
-          mixed(wholes, Math.min(d - 1, (rem === 0 ? 1 : rem) + 1), d)]);
+          mixed(wholes, rem === 0 ? 2 : (rem + 1 >= d ? rem - 1 : rem + 1), d),
+        ];
+        const pool = [correct];
+        for (const c of cands) if (!pool.includes(c) && pool.length < 4) pool.push(c);
+        const opts = shuffle(rng, pool);
         return mc(`Work out ${mixed(w, n, d)} × ${k}`, opts, opts.indexOf(correct), {
           tier, hint: 'Convert to an improper fraction first, or multiply wholes and fraction separately.',
           explain: `${mixed(w, n, d)} = ${fr(w * d + n, d)}; × ${k} = ${fr(topTotal, d)} = ${correct}.`,
