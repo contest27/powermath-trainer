@@ -1,6 +1,6 @@
 # PowerMath Trainer — Project Map
 
-**Status:** v1 built and verified locally · awaiting GitHub repo + iPad acceptance
+**Status:** v1 LIVE at https://contest27.github.io/powermath-trainer/ · awaiting iPad acceptance
 **Last updated:** 2026-07-20
 
 ## Recent (updated 2026-07-20)
@@ -15,7 +15,7 @@ plan: no-build vanilla JS (no Node on this machine).
 3. [[quality_reports/session_logs/2026-07-20_initial-build|Session log]] — build trail and decisions.
 4. [[MEMORY|Project memory]] — decisions + learnings.
 
-**Open for Sebastian:** create the GitHub repo `powermath-trainer` and say the
-word — I push and the Pages workflow deploys · run the iPad acceptance
-checklist (README) · optional: Anthropic API key on the iPad for the AI tutor ·
-optional: teacher's flagged weak topics to seed the scheduler.
+**Open for Sebastian:** run the iPad acceptance checklist (README) at
+https://contest27.github.io/powermath-trainer/ · optional: Anthropic API key on
+the iPad for the AI tutor · optional: teacher's flagged weak topics to seed the
+scheduler.
