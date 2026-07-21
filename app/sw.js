@@ -1,7 +1,7 @@
 // Precaching service worker. Bump CACHE_VERSION on every deploy so clients
 // pick up new content; old caches are cleared on activate.
 
-const CACHE_VERSION = 'pmtrainer-v3';
+const CACHE_VERSION = 'pmtrainer-v4';
 
 const ASSETS = [
   './',

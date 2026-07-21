@@ -35,7 +35,10 @@ export class TutorError extends Error {
 }
 
 export async function askTutor({ question, topic, apiKey }) {
-  if (!navigator.onLine) throw new TutorError('offline');
+  // Deliberately NOT gated on navigator.onLine. That flag is unreliable —
+  // installed iOS web apps can report false while the network works fine —
+  // so refusing to try would strand a perfectly good setup. Always attempt
+  // the request; the flag is only used to word a failure afterwards.
 
   // Built outside the try: a bug here must not masquerade as a network failure.
   const body = JSON.stringify({
@@ -60,7 +63,9 @@ export async function askTutor({ question, topic, apiKey }) {
   } catch (e) {
     // Fetch only throws for transport-level failures: no connection, DNS
     // failure, or a content blocker / firewall dropping the request.
-    throw new TutorError('blocked', { detail: String(e && e.message || e) });
+    throw new TutorError(navigator.onLine ? 'blocked' : 'offline', {
+      detail: String(e && e.message || e),
+    });
   }
 
   if (!res.ok) {
