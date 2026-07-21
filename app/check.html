@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PowerMath — connection check</title>
+  <style>
+    body { font-family: -apple-system, system-ui, sans-serif; margin: 0; padding: 18px; background: #f0f9ff; color: #0f172a; }
+    h1 { font-size: 1.25rem; margin: 0 0 4px; }
+    p.sub { color: #64748b; margin: 0 0 16px; font-size: 0.95rem; }
+    .card { background: #fff; border-radius: 14px; padding: 16px; box-shadow: 0 2px 10px rgb(2 132 199 / 0.08); margin-bottom: 14px; }
+    label { font-weight: 700; display: block; margin-bottom: 6px; font-size: 0.9rem; }
+    input { width: 100%; box-sizing: border-box; border: 2px solid #e2e8f0; border-radius: 10px; padding: 12px; font-size: 1rem; }
+    button { background: #0ea5e9; color: #fff; border: 0; border-radius: 12px; padding: 14px 20px; font-size: 1.05rem; font-weight: 700; width: 100%; margin-top: 10px; }
+    button.sec { background: #e2e8f0; color: #0369a1; }
+    pre { background: #0f172a; color: #e2e8f0; padding: 14px; border-radius: 12px; font-size: 0.82rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word; user-select: text; -webkit-user-select: text; }
+    .verdict { font-size: 1.05rem; font-weight: 700; padding: 14px; border-radius: 12px; margin-bottom: 12px; line-height: 1.45; }
+    .ok { background: #dcfce7; color: #14532d; }
+    .bad { background: #fee2e2; color: #7f1d1d; }
+    .warn { background: #fef9c3; color: #713f12; }
+  </style>
+</head>
+<body>
+  <h1>PowerMath — connection check</h1>
+  <p class="sub">This page talks to the Anthropic API and reports exactly what comes back. Nothing is sent anywhere else; your key never leaves this iPad.</p>
+
+  <div class="card">
+    <label for="key">API key (leave blank to use the one saved in the app)</label>
+    <input id="key" type="password" placeholder="sk-ant-…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+    <button id="run">Run the check</button>
+  </div>
+
+  <div id="verdict"></div>
+  <pre id="out">Tap “Run the check”.</pre>
+  <button id="copy" class="sec">Copy this report</button>
+
+<script>
+const BUILD = 'check-v1';
+const out = document.getElementById('out');
+const verdictEl = document.getElementById('verdict');
+
+function savedKey() {
+  try {
+    const raw = localStorage.getItem('pmtrainer.state.v1');
+    return raw ? (JSON.parse(raw).settings?.apiKey || '') : '';
+  } catch { return ''; }
+}
+
+// Describe the key without ever revealing it.
+function keyShape(k) {
+  if (!k) return 'none found';
+  const clean = k.trim();
+  const bits = [`length ${clean.length}`, `starts "${clean.slice(0, 11)}…"`];
+  if (clean !== k) bits.push('HAD SURROUNDING WHITESPACE');
+  if (/\s/.test(clean)) bits.push('CONTAINS A SPACE OR LINE BREAK INSIDE');
+  if (!clean.startsWith('sk-ant-')) bits.push('DOES NOT START WITH sk-ant-');
+  return bits.join(', ');
+}
+
+async function run() {
+  const lines = [];
+  const add = (k, v) => lines.push(`${k}: ${v}`);
+  verdictEl.innerHTML = '';
+  out.textContent = 'Checking…';
+
+  add('build', BUILD);
+  add('time', new Date().toISOString());
+  add('online flag', navigator.onLine);
+  add('standalone app', !!(window.navigator.standalone || matchMedia('(display-mode: standalone)').matches));
+  add('user agent', navigator.userAgent);
+
+  try {
+    const keys = await caches.keys();
+    add('caches present', keys.length ? keys.join(', ') : 'none');
+  } catch (e) { add('caches present', 'unreadable (' + e.name + ')'); }
+
+  try {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    add('service workers', regs.length);
+  } catch { add('service workers', 'unreadable'); }
+
+  const typed = document.getElementById('key').value.trim();
+  const stored = savedKey();
+  const key = typed || stored;
+  add('key source', typed ? 'typed on this page' : (stored ? 'saved in the app' : 'NONE'));
+  add('key shape', keyShape(key));
+
+  if (!key) {
+    finish(lines, 'bad', 'No key available. Paste your key into the box above and run the check again.');
+    return;
+  }
+
+  let status = null, body = '', threw = null;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': key.trim(),
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 16,
+        messages: [{ role: 'user', content: 'Reply with the single word: ready' }],
+      }),
+    });
+    status = res.status;
+    body = await res.text();
+  } catch (e) {
+    threw = (e && e.name ? e.name : 'Error') + ' — ' + (e && e.message ? e.message : String(e));
+  }
+
+  add('http status', status === null ? 'no response' : status);
+  add('threw', threw || 'no');
+  add('response body', body ? body.slice(0, 900) : '(empty)');
+
+  let cls = 'bad', msg = '';
+  if (threw) {
+    msg = 'The request never reached Anthropic. Something on this device or network is blocking it — a content blocker, a VPN, or a school/company Wi-Fi filter. Try mobile data or another network.';
+  } else if (status === 200) {
+    cls = 'ok';
+    msg = 'Everything works. The key is valid and the tutor is ready to use in the app.';
+  } else if (status === 401) {
+    msg = 'The key was rejected. Copy it again from console.anthropic.com — or create a fresh one — and make sure nothing was cut off.';
+  } else if (status === 400 && /credit|balance|billing/i.test(body)) {
+    cls = 'warn';
+    msg = 'The key is fine, but this account cannot spend on the API yet — see the message below. Promotional credit often does not cover API calls; adding a small paid balance fixes it.';
+  } else if (status === 403) {
+    msg = 'The key is not permitted to do this. It may belong to a workspace without access, or be restricted.';
+  } else if (status === 404) {
+    msg = 'The model was not found for this account.';
+  } else if (status === 429) {
+    cls = 'warn';
+    msg = 'Rate limited. Wait a minute and run the check again.';
+  } else {
+    msg = 'Unexpected response — the details are below.';
+  }
+  finish(lines, cls, msg);
+}
+
+function finish(lines, cls, msg) {
+  verdictEl.className = 'verdict ' + cls;
+  verdictEl.textContent = msg;
+  out.textContent = lines.join('\n');
+}
+
+document.getElementById('run').addEventListener('click', run);
+document.getElementById('copy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(out.textContent); alert('Report copied.'); }
+  catch { alert('Could not copy automatically — press and hold the black box to select the text.'); }
+});
+run();
+</script>
+</body>
+</html>

@@ -1,11 +1,12 @@
 // Precaching service worker. Bump CACHE_VERSION on every deploy so clients
 // pick up new content; old caches are cleared on activate.
 
-const CACHE_VERSION = 'pmtrainer-v2';
+const CACHE_VERSION = 'pmtrainer-v3';
 
 const ASSETS = [
   './',
   './index.html',
+  './check.html',
   './manifest.webmanifest',
   './css/app.css',
   './js/app.js',
@@ -55,15 +56,21 @@ self.addEventListener('fetch', (e) => {
   if (url.origin !== location.origin) return; // API calls etc. go straight to the network
 
   // Navigations: try the network (so updates arrive), fall back to cache offline.
+  // Only the app shell refreshes the cached index.html — caching any navigation
+  // there would let a secondary page (e.g. check.html) overwrite the shell.
   if (e.request.mode === 'navigate') {
+    const isShell = url.pathname.endsWith('/') || url.pathname.endsWith('/index.html');
     e.respondWith(
       fetch(e.request)
         .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE_VERSION).then((c) => c.put('./index.html', copy));
+          if (isShell && res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE_VERSION).then((c) => c.put('./index.html', copy));
+          }
           return res;
         })
-        .catch(() => caches.match('./index.html')),
+        .catch(() => caches.match(isShell ? './index.html' : e.request)
+          .then((hit) => hit || caches.match('./index.html'))),
     );
     return;
   }
