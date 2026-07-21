@@ -21,8 +21,30 @@ function systemPrompt(topic) {
   ].join('\n');
 }
 
+// Errors carry: kind ('offline' | 'blocked' | 'http' | 'bad-response'),
+// status (HTTP code) and detail (the API's own message) so the parent corner
+// can show exactly what went wrong instead of a vague catch-all.
+export class TutorError extends Error {
+  constructor(kind, { status = null, detail = '' } = {}) {
+    super(`${kind}${status ? ' ' + status : ''}${detail ? ': ' + detail : ''}`);
+    this.kind = kind;
+    this.status = status;
+    this.detail = detail;
+    this.offline = kind === 'offline' || kind === 'blocked';
+  }
+}
+
 export async function askTutor({ question, topic, apiKey }) {
-  if (!navigator.onLine) { const e = new Error('offline'); e.offline = true; throw e; }
+  if (!navigator.onLine) throw new TutorError('offline');
+
+  // Built outside the try: a bug here must not masquerade as a network failure.
+  const body = JSON.stringify({
+    model: MODEL,
+    max_tokens: 300,
+    system: systemPrompt(topic),
+    messages: [{ role: 'user', content: question }],
+  });
+
   let res;
   try {
     res = await fetch(API_URL, {
@@ -33,19 +55,25 @@ export async function askTutor({ question, topic, apiKey }) {
         'anthropic-version': '2023-06-01',
         'anthropic-dangerous-direct-browser-access': 'true',
       },
-      body: JSON.stringify({
-        model: MODEL,
-        max_tokens: 300,
-        system: systemPrompt(topic),
-        messages: [{ role: 'user', content: question }],
-      }),
+      body,
     });
-  } catch {
-    const e = new Error('network'); e.offline = true; throw e;
+  } catch (e) {
+    // Fetch only throws for transport-level failures: no connection, DNS
+    // failure, or a content blocker / firewall dropping the request.
+    throw new TutorError('blocked', { detail: String(e && e.message || e) });
   }
+
   if (!res.ok) {
-    const e = new Error('api ' + res.status); e.status = res.status; throw e;
+    let detail = '';
+    try {
+      const err = await res.json();
+      detail = err?.error?.message || '';
+    } catch {
+      detail = (await res.text().catch(() => '')).slice(0, 200);
+    }
+    throw new TutorError('http', { status: res.status, detail });
   }
+
   const data = await res.json();
   const text = (data.content ?? [])
     .filter((b) => b.type === 'text')

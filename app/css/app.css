@@ -207,6 +207,7 @@ h1, h2, h3 { margin: 0 0 8px; }
 .text-in { border: 2px solid var(--line); border-radius: 12px; padding: 10px 12px; width: 100%; max-width: 340px; }
 .lab { display: block; font-weight: 700; margin: 12px 0 4px; font-size: 0.9rem; }
 .sub { margin-top: 14px; font-size: 0.95rem; }
+.key-status { flex-basis: 100%; overflow-wrap: anywhere; line-height: 1.45; user-select: text; }
 .qlog { padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.88rem; }
 .qlog-a { margin-top: 2px; }
 .unit-note { text-align: center; color: var(--muted); margin-top: 6px; }

@@ -77,7 +77,7 @@ registerScreen('parent', () => {
     class: 'text-in', type: 'password', placeholder: 'sk-ant-…',
     value: st.settings.apiKey || '', autocomplete: 'off',
   });
-  const status = h('span', { class: 'muted' }, st.settings.apiKey ? 'Key saved.' : 'No key set — question chips still work offline.');
+  const status = h('span', { class: 'muted key-status' }, st.settings.apiKey ? 'Key saved.' : 'No key set — question chips still work offline.');
   const saveBtn = h('button', {
     class: 'btn', onclick: () => {
       st.settings.apiKey = keyIn.value.trim();
@@ -91,8 +91,12 @@ registerScreen('parent', () => {
       const k = keyIn.value.trim();
       if (!k) return toast('Enter a key first');
       status.textContent = 'Testing…';
-      try { await testKey(k); status.textContent = '✅ Key works.'; }
-      catch (e) { status.textContent = e.status === 401 ? '❌ Key rejected (401).' : '❌ Could not reach the API.'; }
+      try {
+        await testKey(k);
+        status.textContent = '✅ Key works.';
+      } catch (e) {
+        status.textContent = describeTutorError(e);
+      }
     },
   }, 'Test');
   ai.append(h('div', { class: 'row gap' }, keyIn), h('div', { class: 'row gap' }, saveBtn, testBtn, status));
@@ -179,4 +183,26 @@ registerScreen('parent', () => {
 
 function section(title) {
   return h('div', { class: 'card psec' }, h('h2', { class: 'psec-title' }, title));
+}
+
+// Turn a TutorError into something a parent can act on — including the API's
+// own wording, which names the real problem (bad key, no credit, wrong model).
+function describeTutorError(e) {
+  if (!e) return '❌ Unknown error.';
+  if (e.kind === 'offline') return '❌ This device reports no internet connection.';
+  if (e.kind === 'blocked') {
+    return '❌ The request never reached api.anthropic.com — a content blocker, VPN or network filter is likely blocking it. '
+      + (e.detail ? `(${e.detail})` : '');
+  }
+  if (e.kind === 'http') {
+    const head = {
+      400: 'Request refused (400)',
+      401: 'Key rejected (401) — check for a typo or a deleted key',
+      403: 'Not permitted (403)',
+      404: 'Not found (404) — the model may be unavailable on this account',
+      429: 'Rate limited (429) — try again in a moment',
+    }[e.status] || `API error (${e.status})`;
+    return `❌ ${head}.` + (e.detail ? ` ${e.detail}` : '');
+  }
+  return `❌ ${e.message || 'Unknown error.'}`;
 }
