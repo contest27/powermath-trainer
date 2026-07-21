@@ -28,6 +28,18 @@ Project-scope memory. Cross-project lessons go to `~/.claude/MEMORY.md`.
   whole class of generator bugs cheaply; duplicate-MC-options was the only
   failure class in 3,840 generated questions (5 generators, all fixed by
   dedupe-with-candidate-pools; `mcFrom` now dedupes globally).
+- [LEARN:api] **Anthropic promotional credit does not pay for API usage.** A
+  console account showing a healthy balance can still fail every API call if
+  that balance is promotional; the key itself is valid. Cost us several
+  round-trips on 2026-07-21 because the app collapsed every failure into
+  "Could not reach the API". Fix: buy paid credit (min $5).
+- [LEARN:errors] Never collapse distinct failure modes into one message. The
+  catch-all above hid the real cause; `TutorError` now carries kind + HTTP
+  status + the API's own wording, and `app/check.html` is a cache-proof
+  diagnostic page (self-contained, no module imports) for field debugging.
+- [LEARN:web] `navigator.onLine` is unreliable in installed iOS web apps — it
+  can report false while the network works. Never gate a request on it;
+  attempt the call and use the flag only to word a failure afterwards.
 - [LEARN:content] `pdftotext -layout` (TeXLive) reads the "password-protected"
   Power Maths overview PDFs that both WebFetch and the PDF Read tool reject —
   owner-locked PDFs are usually extractable.

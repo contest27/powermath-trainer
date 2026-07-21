@@ -59,6 +59,10 @@ service worker version changes.
 6. Optional AI tutor: long-press ⚙️ → solve the sum → *AI tutor* → paste an
    API key from console.anthropic.com → **Test** → ask a question in any
    explanation screen.
+   **Gotcha: promotional credit does not pay for API calls.** An account
+   holding only promo credit returns a billing error even though the key is
+   valid. Buy a small paid balance (the $5 minimum lasts years at this usage).
+   `check.html` diagnoses this and every other failure mode explicitly.
 7. Parent corner → **Export backup** — save the file to Files/AirDrop weekly.
 8. Airplane mode → reopen the app — it should still work (FAQ chips instead of
    the AI tutor).
