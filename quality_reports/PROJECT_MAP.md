@@ -1,25 +1,26 @@
 # PowerMath Trainer — Project Map
 
-**Status:** v1 + Watch-PoC LIVE at https://contest27.github.io/powermath-trainer/ · awaiting iPad test of the episode
+**Status:** v1 + Watch + Schatzkarten-Map LIVE (sw v6) · offen: iPad-Sichttest + Media-Cache-Probe
 **Last updated:** 2026-07-24
 
 ## Recent (updated 2026-07-24)
 
-**Active workstream — Watch-Episoden PoC** (*video-artige, vertonte In-App-Erklärfilme
-statt Podcast/MP4 — Facharzttrainer-Feature-Transfer*). Erste Episode „Equivalent
-fractions" (Unit 8, 18 Steps, 2,9 min, edge-tts Sonia/Maisie) gebaut, verifiziert
-(70/70 Tests, Playback-Kette real gemessen), committet und deployt (sw v5). Offen:
-iPad-Gestenkette + Stimmen-Abnahme.
+**Active workstream — Schatzkarten-Map** (*Lernlandkarte als Piraten-Abenteuerpfad:
+eine SVG-Landkarte, 32 Stationen, 10 Regionen, ⛵ auf der aktuellen Station, Nebel,
+Schatz-Finale mit Piratenschiff*). Gebaut, verifiziert (84/84 Tests, drei Seeds im
+iPad-Viewport, Watch-Roundtrip), Sichttest bestanden (Korrekturrunde: Schilder über
+der Route, Piratenschiff ergänzt), committet und deployt (sw v6).
 
-1. [[quality_reports/session_logs/2026-07-23_watch-poc|📄 Session-Log Watch-PoC]] — Verlauf + vollständige Verifikationsliste. **Start here.**
-2. [[quality_reports/plans/2026-07-23_watch-episodes-poc|Approved plan]] — Architektur (Blob-Audio-Kette, Media-Cache, Szenen-DSL).
-3. [[README|README]] — Nutzerdoku inkl. neuem Watch-Absatz + narrate.py.
-4. [[MEMORY|Project memory]] — neue Entscheidung 2026-07-23 (In-App-Animation, edge-tts, Media-Cache).
+1. [[quality_reports/session_logs/2026-07-24_treasure-map|📄 Session-Log Schatzkarte]] — Verlauf + Verifikationsliste. **Start here.**
+2. [[quality_reports/plans/2026-07-24_treasure-map|Approved plan]] — Geometrie, Regionen, Fix-Liste F1–F7.
+3. [[quality_reports/session_logs/2026-07-23_watch-poc|Session-Log Watch-PoC]] — Vortag: Erklärfilm-Feature (deployt, sw v5, iPad bestätigt).
+4. [[MEMORY|Project memory]] — Entscheidungen 2026-07-23 (Watch) + 2026-07-24 (Schatzkarte, iOS-Zweistart-Lesson).
 
-**Open for Sebastian:** auf dem iPad die Episode einmal komplett laufen lassen
-(Gestenkette!) und Stimmen beurteilen (Fallback: Gemini-TTS) · danach Offline-Probe:
-Flugmodus → Rewatch aus der Map · nächste Übernahme-Kandidaten wählen
-(Streaming-Tutor, KI-Buddy, „Thema üben").
+**Open for Sebastian:** iPad aktualisieren (zwei echte Starts) → Schatzkarte mit dem
+Sohn ansehen · **Media-Cache-Probe:** Flugmodus → Watch-Episode muss ohne Nachladen
+spielen (v5→v6-Bump überlebt?) · Watch-Episode einmal komplett (Gestenkette +
+Stimmen-Urteil) · danach nächste Übernahme wählen (Streaming-Tutor, KI-Buddy,
+„Thema üben").
 
 *(Der v1-Status unten bleibt gültig; die iPad-Akzeptanz von v1 ist weiterhin offen.)*
 

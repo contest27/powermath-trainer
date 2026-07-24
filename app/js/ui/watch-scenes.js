@@ -1,14 +1,14 @@
-// Scene renderer for Watch episodes. Builds real DOM SVGs (createElementNS —
-// core.js h() cannot create SVG elements) in the visual style of
-// content/vis.js, with class hooks so CSS can animate parts of a scene.
-// Standalone by design: no imports, renderable on a detached DOM (tests).
+// Scene renderer for Watch episodes. Builds real DOM SVGs in the visual
+// style of content/vis.js, with class hooks so CSS can animate parts of a
+// scene. Imports only ui/svg.js; still renders on a detached DOM (tests).
 //
 // Animation model: renderScene() marks elements with entry classes
 // (a-fade / a-pop / a-rise / a-draw / a-vanish, staggered via --i);
 // mountScene() forces a reflow, then adds .run to the root, which lets the
 // CSS transitions carry every marked element to its final state.
 
-const SVG_NS = 'http://www.w3.org/2000/svg';
+import { s, di } from './svg.js';
+
 const VIEW = '0 0 320 240';
 
 // Palette shared with content/vis.js — keep in sync (tested).
@@ -27,25 +27,6 @@ const ACCENT = '#0369a1'; // --brand-dark
 
 export function colorFor(name) {
   return PALETTE[name] ?? PALETTE.green;
-}
-
-function s(tag, attrs = {}, ...children) {
-  const el = document.createElementNS(SVG_NS, tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (v == null || v === false) continue;
-    el.setAttribute(k, v === true ? '' : v);
-  }
-  for (const c of children.flat()) {
-    if (c == null || c === false) continue;
-    el.append(c.nodeType ? c : document.createTextNode(String(c)));
-  }
-  return el;
-}
-
-// Stagger index -> transition delay (CSS: calc(var(--i) * 0.12s)).
-function di(el, i) {
-  el.style.setProperty('--i', String(i));
-  return el;
 }
 
 function txt(x, y, str, { size = 16, fill = INK, weight = null, anchor = 'middle', cls = null } = {}) {

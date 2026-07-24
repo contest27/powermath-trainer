@@ -27,6 +27,8 @@ async function run() {
       watch: await import('../js/engine/watch.js'),
       watchIndex: await import('../js/content/watch-index.js'),
       watchScenes: await import('../js/ui/watch-scenes.js'),
+      svg: await import('../js/ui/svg.js'),
+      mapScene: await import('../js/ui/map-scene.js'),
     };
   } catch (e) {
     results.push({ name: 'MODULE IMPORTS', ok: false, err: String(e) });
@@ -485,6 +487,185 @@ async function run() {
     eq(colorFor('red'), '#fca5a5');
     eq(colorFor('purple'), '#c4b5fd');
     eq(colorFor('nonsense'), '#86efac', 'unknown colors fall back to green');
+  });
+
+  // ---------------- treasure map
+  const { buildTreasureMap, deriveRegions, regionTop, GEO } = mods.mapScene;
+
+  function mkTreasureMap({ completed = [], stars = {}, mastery = {}, episodeForUnit = mods.watchIndex.episodeForUnit, onStation, onWatch } = {}) {
+    const st = defaultState();
+    st.completed = completed;
+    st.stars = stars;
+    st.mastery = mastery;
+    return buildTreasureMap({ topics, strands: mods.content.STRANDS, state: st, episodeForUnit, onStation, onWatch });
+  }
+  const mapH = () => {
+    const regions = deriveRegions(topics);
+    return GEO.TOP + regions.length * GEO.HDR + topics.length * GEO.STEP + GEO.FIN;
+  };
+
+  test('map: renders 32 stations in curriculum order', () => {
+    const { svg } = mkTreasureMap();
+    const ids = [...svg.querySelectorAll('.tmap-station')].map((g) => g.getAttribute('data-topic'));
+    eq(ids, topicOrder);
+  });
+
+  test('map: region bands match the strand runs', () => {
+    const runs = deriveRegions(topics).map((r) => [r.strand, r.count]);
+    eq(runs, [['place', 3], ['addsub', 3], ['stats', 1], ['multdiv', 2], ['measure', 2], ['multdiv', 3], ['fractions', 6], ['decimals', 5], ['geometry', 4], ['measure', 3]]);
+    const { svg } = mkTreasureMap();
+    const signs = [...svg.querySelectorAll('.tmap-sign')];
+    eq(signs.length, 10);
+    signs.forEach((sg, r) => {
+      const meta = mods.content.STRANDS[deriveRegions(topics)[r].strand];
+      ok(sg.textContent.includes(meta.title), `sign ${r} should show ${meta.title}`);
+    });
+    // SVG paints in document order: planks must come after the route so the
+    // dashed path never crosses out a signpost.
+    const route = svg.querySelector('.tmap-route');
+    ok(route.compareDocumentPosition(signs[0]) & Node.DOCUMENT_POSITION_FOLLOWING,
+      'signposts must render above the route');
+  });
+
+  test('map: done/current/locked classes derive from state', () => {
+    const { svg, currentEl, doneCount } = mkTreasureMap({ completed: topicOrder.slice(0, 5) });
+    const st = [...svg.querySelectorAll('.tmap-station')];
+    ok(st[4].classList.contains('done'));
+    ok(st[5].classList.contains('current'));
+    ok(st[5].querySelector('.tmap-marker') && st[5].querySelector('.tmap-pulse'), 'current carries boat and pulse');
+    ok(st[6].classList.contains('locked'));
+    eq(doneCount, 5);
+    ok(currentEl === st[5], 'currentEl points at the current station');
+  });
+
+  test('map: exactly one current station; none when all done', () => {
+    const fresh = mkTreasureMap();
+    eq(fresh.svg.querySelectorAll('.tmap-station.current').length, 1);
+    ok(fresh.svg.querySelectorAll('.tmap-station')[0].classList.contains('current'));
+    const all = mkTreasureMap({ completed: topicOrder.slice() });
+    eq(all.svg.querySelectorAll('.tmap-station.current').length, 0);
+    eq(all.svg.querySelectorAll('.tmap-marker').length, 0);
+    ok(all.allDone, 'allDone flag');
+    eq(all.doneCount, 32);
+    ok(all.svg.querySelector('.tmap-chest').classList.contains('open'), 'chest opens');
+    ok(all.currentEl === null, 'no currentEl when done');
+    ok(all.finaleEl && all.finaleEl.classList.contains('tmap-finale'), 'finaleEl exposed');
+  });
+
+  test('map: ring colors follow the mastery bands', () => {
+    const ids = topicOrder.slice(0, 4);
+    const { svg } = mkTreasureMap({
+      completed: ids,
+      mastery: { [ids[0]]: { score: 50 }, [ids[1]]: { score: 70 }, [ids[2]]: { score: 90 } },
+    });
+    const st = [...svg.querySelectorAll('.tmap-station')];
+    ok(st[0].classList.contains('band-red'));
+    ok(st[1].classList.contains('band-amber'));
+    ok(st[2].classList.contains('band-green'));
+    ok(st[3].classList.contains('band-none'), 'completed without mastery falls back');
+  });
+
+  test('map: watch signposts sit exactly where the registry has episodes', () => {
+    const { svg } = mkTreasureMap();
+    const signs = [...svg.querySelectorAll('.tmap-watch')];
+    const expected = topics.filter((t) => mods.watchIndex.episodeForUnit(t.unit));
+    eq(signs.length, expected.length);
+    ok(signs.length >= 2, 'unit 8 has two stations today');
+    for (const sg of signs) ok(sg.getAttribute('aria-label').startsWith('Watch: '), 'sign aria-label');
+  });
+
+  test('map: watch sign fires onWatch and not onStation', () => {
+    let watch = 0;
+    let station = 0;
+    const { svg } = mkTreasureMap({ onStation: () => station++, onWatch: () => watch++ });
+    svg.querySelector('.tmap-watch').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    eq([watch, station], [1, 0]);
+  });
+
+  test('map: station tap reports topic and status', () => {
+    const calls = [];
+    const { svg } = mkTreasureMap({
+      completed: topicOrder.slice(0, 2),
+      onStation: (t, status) => calls.push([t.id, status]),
+    });
+    const st = [...svg.querySelectorAll('.tmap-station')];
+    st[0].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    st[2].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    st[5].dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    eq(calls, [[topicOrder[0], 'done'], [topicOrder[2], 'current'], [topicOrder[5], 'locked']]);
+  });
+
+  test('map: fog starts after the current region and spares the treasure', () => {
+    const regions = deriveRegions(topics);
+    const m = mkTreasureMap({ completed: topicOrder.slice(0, 6) }); // current idx 6 = stats region (2)
+    const fog = m.svg.querySelector('.tmap-fog');
+    eq(fog.getAttribute('data-after-region'), '3');
+    const rect = fog.querySelector('rect');
+    eq(Number(rect.getAttribute('y')), regionTop(regions, 3));
+    eq(Number(rect.getAttribute('y')) + Number(rect.getAttribute('height')), mapH() - GEO.FIN);
+    eq(fog.getAttribute('pointer-events'), 'none');
+    eq(mkTreasureMap().svg.querySelector('.tmap-fog').getAttribute('data-after-region'), '1');
+    ok(!mkTreasureMap({ completed: topicOrder.slice() }).svg.querySelector('.tmap-fog'), 'no fog when all done');
+  });
+
+  test('map: treasure finale present with the goal flag', () => {
+    const { svg } = mkTreasureMap();
+    const fin = svg.querySelector('.tmap-finale');
+    ok(fin.querySelector('.tmap-x'), 'X marks the spot');
+    const chest = fin.querySelector('.tmap-chest');
+    ok(chest && !chest.classList.contains('open'), 'chest closed while incomplete');
+    ok(fin.textContent.includes('32/32'), 'goal flag');
+    ok(fin.querySelector('.tmap-ship'), 'pirate ship anchors in the cove');
+  });
+
+  test('map: sw assets include the map modules and the version was bumped', () => {
+    ok(swText, 'sw.js did not load');
+    ok(swText.includes("'./js/ui/svg.js'"), 'sw.js ASSETS missing svg.js');
+    ok(swText.includes("'./js/ui/map-scene.js'"), 'sw.js ASSETS missing map-scene.js');
+    ok(!swText.includes("'pmtrainer-v5'"), 'CACHE_VERSION was not bumped for the map release');
+  });
+
+  test('map: geometry stays inside the viewBox and targets stay big', () => {
+    const { svg } = mkTreasureMap();
+    eq(svg.getAttribute('viewBox'), `0 0 320 ${mapH()}`);
+    for (const g of svg.querySelectorAll('.tmap-station')) {
+      const hit = g.querySelector('.tmap-hit');
+      const cx = Number(hit.getAttribute('cx'));
+      ok(cx >= 80 && cx <= 240 && cx !== 160, 'station x inside meander band: ' + cx);
+      ok(Number(hit.getAttribute('r')) >= 17, 'station hit target too small');
+    }
+    for (const c of svg.querySelectorAll('.tmap-watch circle')) {
+      ok(Number(c.getAttribute('r')) >= 14, 'sign target too small');
+    }
+    for (const tl of svg.querySelectorAll('.tmap-label')) {
+      const x = Number(tl.getAttribute('x'));
+      const w = tl.textContent.length * 5.8;
+      const anchorStart = tl.getAttribute('text-anchor') === 'start';
+      const lo = anchorStart ? x : x - w;
+      const hi = anchorStart ? x + w : x;
+      ok(lo >= 18 && hi <= 302, `label "${tl.textContent}" extent ${lo.toFixed(0)}..${hi.toFixed(0)} out of bounds`);
+    }
+  });
+
+  // ---------------- shared svg helpers
+  test('svg: s() builds namespaced elements with attrs and children', () => {
+    const { s, SVG_NS } = mods.svg;
+    const g = s('g', { class: 'x', hidden: false, skip: null, flag: true },
+      'text', s('rect', { x: 5 }), [s('circle', { r: 3 }), null]);
+    eq(g.namespaceURI, SVG_NS);
+    eq(g.getAttribute('class'), 'x');
+    ok(!g.hasAttribute('hidden'), 'false attrs skipped');
+    ok(!g.hasAttribute('skip'), 'null attrs skipped');
+    eq(g.getAttribute('flag'), '', 'true renders as empty attr');
+    eq(g.childNodes.length, 3, 'text + node + flattened array child');
+    eq(g.firstChild.textContent, 'text');
+    eq(g.querySelector('rect').getAttribute('x'), '5');
+  });
+
+  test('svg: di() sets the stagger property', () => {
+    const { s, di } = mods.svg;
+    const el = di(s('rect'), 4);
+    eq(el.style.getPropertyValue('--i'), '4');
   });
 
   test('watch: sw assets and media cache are consistent', () => {

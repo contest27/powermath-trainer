@@ -31,6 +31,11 @@ no backend. Deployable to GitHub Pages as-is.
   The key lives only on the device and is stripped from backups.
 - **Parent corner** (long-press the ⚙️): mastery heatmap, session history,
   AI question log, voice settings, backup export/import, reset.
+- **Treasure map**: the map screen is one hand-drawn SVG pirate map — all 32
+  topics as stations on a dashed route through themed strand regions, a
+  bobbing ship on the current topic, fog over future lands, stars and
+  mastery-ring colours on completed coins, and a treasure chest that opens
+  at 32/32.
 - **PWA**: installable to the home screen, works offline after first load.
 
 ## Deploying to GitHub Pages
@@ -77,9 +82,9 @@ No Node.js required.
 
 - **Serve locally**: `python3 tools/serve.py 8124` → http://localhost:8124
   (no-cache dev server; the service worker is skipped on localhost).
-- **Run tests**: open http://localhost:8124/tests/tests.html — 54 tests
-  covering the engine, checker, and a 3,840-question property sweep across
-  every generator. All must pass.
+- **Run tests**: open http://localhost:8124/tests/tests.html — the browser
+  suite covers the engine, checker, Watch episodes, the treasure map, and a
+  3,840-question property sweep across every generator. All must pass.
 - **Regenerate icons**: `python3 tools/make_icons.py` (needs Pillow).
 - **Render Watch narration**: `python3 tools/narrate.py app/data/watch/<episode>.json`
   (needs `pip install edge-tts` and network; free, keyless). `--check` validates

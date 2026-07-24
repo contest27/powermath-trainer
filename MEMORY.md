@@ -24,6 +24,17 @@ Project-scope memory. Cross-project lessons go to `~/.claude/MEMORY.md`.
   first pip dependency of tools/ (`tools/narrate.py`); rendering needs the
   sandbox disabled (network), `--check` does not.
 
+- **2026-07-24 — Map screen is a single-SVG pirate treasure map** („Abenteuer-
+  Pfad"/„Schatzkarte", Sebastian's call for his son): pure builder
+  `ui/map-scene.js` + shared `ui/svg.js` (s/di extracted from watch-scenes);
+  32 stations in topicOrder, 10 regions from contiguous strand runs, fog after
+  the current region, chest opens at 32/32. Mastery band moved into the coin
+  ring colour (bandDot stays parent-corner only); toast is the station
+  popover; Watch signs stay unit-scoped (two signs for unit 8, parity with the
+  old list). The v5→v6 SW bump doubles as the real-world probe that
+  `pmtrainer-media-v1` survives version bumps — record the outcome after the
+  iPad check.
+
 ## Learnings
 
 - [LEARN:web] The embedded browser pane serves **stale ES modules from the HTTP
@@ -33,6 +44,15 @@ Project-scope memory. Cross-project lessons go to `~/.claude/MEMORY.md`.
   (module cache) — they can differ.
 - [LEARN:pwa] Register the service worker only off-localhost, or local testing
   fights the precache. Deploys must bump `CACHE_VERSION` (see CLAUDE.md).
+- [LEARN:pwa] An installed iOS PWA shows a new deploy only on the SECOND real
+  launch: first launch installs the new SW in the background, and swiping the
+  app away then reopening immediately often just thaws the frozen instance.
+  Ritual: open with network ~30 s → kill via app switcher → reopen. Confirmed
+  2026-07-24 (Watch-PoC rollout). Corollary: a release whose visible change
+  is buried (Watch ▶ lives on the map's fractions island; Today looked
+  identical) is indistinguishable from a failed update — the app has no
+  version indicator yet (candidate: CACHE_VERSION row + "check for update"
+  button in the Parent corner).
 - [LEARN:testing] The "checker accepts its own answer" round-trip catches a
   whole class of generator bugs cheaply; duplicate-MC-options was the only
   failure class in 3,840 generated questions (5 generators, all fixed by

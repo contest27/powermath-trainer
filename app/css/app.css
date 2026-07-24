@@ -182,23 +182,12 @@ h1, h2, h3 { margin: 0 0 8px; }
 .stars.md { font-size: 1.3rem; }
 .stars.sm { font-size: 0.95rem; }
 
-/* ---- map ---- */
-.island-title { color: var(--brand-dark); font-size: 1.1rem; }
-.map-row { display: flex; align-items: center; gap: 10px; padding: 9px 4px; border-bottom: 1px solid #f1f5f9; }
-.map-row:last-child { border-bottom: 0; }
-.map-row.locked { opacity: 0.45; }
-.map-row.next { background: #f0f9ff; border-radius: 10px; }
-.map-emoji { font-size: 1.2rem; width: 30px; text-align: center; }
-.map-title { flex: 1; font-weight: 600; }
+/* ---- band dots (parent corner) ---- */
 .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
 .dot.red { background: #f87171; }
 .dot.amber { background: #fbbf24; }
 .dot.green { background: #34d399; }
 .dot.grey { background: #cbd5e1; }
-.map-watch {
-  width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--line);
-  background: var(--card); color: var(--brand-dark); font-size: 0.9rem; flex: none;
-}
 
 /* ---- parent ---- */
 .parent .psec-title { color: var(--brand-dark); font-size: 1.05rem; }
@@ -252,6 +241,36 @@ h1, h2, h3 { margin: 0 0 8px; }
   .scene .a-fade, .scene .a-pop, .scene .a-rise, .scene .a-draw,
   .scene .nl-pointer.hop, .scene .a-vanish { transition-duration: 0s; transition-delay: 0s; }
   .scene.run .fb-hl { animation: none; }
+}
+
+/* ---- treasure map ---- */
+.tmap { width: 100%; height: auto; display: block; }
+.tmap * { transform-box: fill-box; transform-origin: center; }
+.tmap-card { padding: 6px; }
+.tmap-hit { fill: transparent; }
+.tmap-station, .tmap-watch { cursor: pointer; }
+.tmap-station:focus-visible, .tmap-watch:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+.tmap-station.locked .tmap-node { stroke: #c9b08a; }
+.tmap-station.current .tmap-node { stroke: var(--brand-dark); }
+.tmap-station.band-green .tmap-node { stroke: #16a34a; }
+.tmap-station.band-amber .tmap-node { stroke: #d97706; }
+.tmap-station.band-red .tmap-node { stroke: #dc2626; }
+.tmap-station.band-none .tmap-node { stroke: #b08968; }
+.tmap-label { paint-order: stroke; stroke: rgba(247, 237, 216, 0.85); stroke-width: 3px; }
+.tmap-marker { animation: tmap-bob 1.6s ease-in-out infinite; }
+.tmap-ship { animation: tmap-bob 3.2s ease-in-out infinite; }
+@keyframes tmap-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+.tmap-pulse { animation: tmap-pulse 1.8s ease-out infinite; }
+@keyframes tmap-pulse { 0% { transform: scale(1); opacity: 0.8; } 70% { transform: scale(1.35); opacity: 0; } 100% { opacity: 0; } }
+.tmap .tmap-current-pop { transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s; }
+.tmap:not(.run) .tmap-current-pop { transform: scale(0.6); opacity: 0; }
+.tmap-chest .lid-open, .tmap-chest .chest-sparkle { display: none; }
+.tmap-chest.open .lid-open, .tmap-chest.open .chest-sparkle { display: block; }
+.tmap-chest.open .lid-closed, .tmap-chest.open .chest-lock { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .tmap-marker, .tmap-pulse, .tmap-ship { animation: none; }
+  .tmap-pulse { opacity: 0.35; }
+  .tmap .tmap-current-pop { transition-duration: 0s; }
 }
 
 /* ---- watch: player ---- */
