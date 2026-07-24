@@ -1,0 +1,414 @@
+{
+ "id": "u08-fractions",
+ "title": "Equivalent fractions",
+ "unit": 8,
+ "unitLabel": "Unit 8 · Fractions",
+ "topicIds": [
+  "u08-equivalent"
+ ],
+ "version": 1,
+ "rate": "-4%",
+ "voices": {
+  "teacher": "en-GB-SoniaNeural",
+  "kid": "en-GB-MaisieNeural"
+ },
+ "speakers": {
+  "teacher": "Miss Sonia",
+  "kid": "Maisie"
+ },
+ "steps": [
+  {
+   "id": "s01",
+   "speaker": "teacher",
+   "text": "Hello! Today we are exploring equivalent fractions. That means different names for the same amount. Ready, Maisie? Let's go!",
+   "audio": "u08-fractions/s01.mp3",
+   "durationSec": 10.39,
+   "srcHash": "c790e7df28a1477c7e4cf97cc2673bfd98943b4c",
+   "scene": {
+    "type": "titleCard",
+    "title": "Equivalent fractions",
+    "sub": "Unit 8 · Fractions",
+    "emoji": "🍫"
+   }
+  },
+  {
+   "id": "s02",
+   "speaker": "kid",
+   "text": "Miss Sonia, I've got a chocolate bar cut into two equal parts, and I'm keeping one. That's one half!",
+   "audio": "u08-fractions/s02.mp3",
+   "durationSec": 8.28,
+   "srcHash": "27683246d01a02053495933b57ec4614c8b0d827",
+   "scene": {
+    "type": "fracBars",
+    "bars": [
+     {
+      "n": 1,
+      "d": 2,
+      "label": "1/2"
+     }
+    ],
+    "anim": "shade"
+   }
+  },
+  {
+   "id": "s03",
+   "speaker": "teacher",
+   "text": "Lovely. Now watch closely. I snap every piece in two, so the bar is cut into quarters. Did your amount of chocolate change?",
+   "audio": "u08-fractions/s03.mp3",
+   "durationSec": 9.77,
+   "srcHash": "e2091c574ffc1a1a7fe500649ba69972ef7e9b34",
+   "scene": {
+    "type": "fracBars",
+    "bars": [
+     {
+      "n": 2,
+      "d": 4,
+      "splitFrom": 2,
+      "label": "2/4"
+     }
+    ],
+    "anim": "split"
+   }
+  },
+  {
+   "id": "s04",
+   "speaker": "kid",
+   "text": "No! I have two pieces now instead of one, but it is exactly the same amount of chocolate.",
+   "audio": "u08-fractions/s04.mp3",
+   "durationSec": 7.73,
+   "srcHash": "03aed656d0d6f51130ed2a266212d5440acb2392",
+   "scene": {
+    "type": "fracBars",
+    "bars": [
+     {
+      "n": 1,
+      "d": 2,
+      "label": "1/2"
+     },
+     {
+      "n": 2,
+      "d": 4,
+      "label": "2/4",
+      "color": "blue"
+     }
+    ],
+    "anim": "shade"
+   }
+  },
+  {
+   "id": "s05",
+   "speaker": "teacher",
+   "text": "Exactly. One half and two quarters are the same amount, so we call them equivalent fractions. Equivalent simply means same value.",
+   "audio": "u08-fractions/s05.mp3",
+   "durationSec": 9.65,
+   "srcHash": "393ef6a9de4612f0acc5f2f8d515f3d96555fd95",
+   "scene": {
+    "type": "fracNotation",
+    "items": [
+     {
+      "n": 1,
+      "d": 2
+     },
+     {
+      "n": 2,
+      "d": 4
+     }
+    ],
+    "joiner": "=",
+    "anim": "equals"
+   }
+  },
+  {
+   "id": "s06",
+   "speaker": "teacher",
+   "text": "Quick reminder before the magic trick. The bottom number is the denominator. It tells us how many equal parts the whole is cut into.",
+   "audio": "u08-fractions/s06.mp3",
+   "durationSec": 9.41,
+   "srcHash": "adaf09dacd49f82184a8088b3c52010a0d1e4a31",
+   "scene": {
+    "type": "fracNotation",
+    "items": [
+     {
+      "n": 2,
+      "d": 3
+     }
+    ],
+    "emphasis": "d",
+    "anim": "buildD"
+   }
+  },
+  {
+   "id": "s07",
+   "speaker": "kid",
+   "text": "And the top number is the numerator. It counts how many of those parts we take!",
+   "audio": "u08-fractions/s07.mp3",
+   "durationSec": 6.65,
+   "srcHash": "1858f813e7097ac28d6b890889def3c7ebe43fe6",
+   "scene": {
+    "type": "fracNotation",
+    "items": [
+     {
+      "n": 2,
+      "d": 3
+     }
+    ],
+    "emphasis": "n",
+    "anim": "buildN"
+   }
+  },
+  {
+   "id": "s08",
+   "speaker": "teacher",
+   "text": "Here is the golden rule. Multiply the top AND the bottom by the same number. Two thirds, times two on top and times two on the bottom, becomes four sixths.",
+   "audio": "u08-fractions/s08.mp3",
+   "durationSec": 11.23,
+   "srcHash": "d9cca29a9a7d4634378fdf62c9dc713a2c9fae26",
+   "scene": {
+    "type": "fracNotation",
+    "items": [
+     {
+      "n": 2,
+      "d": 3
+     },
+     {
+      "n": 4,
+      "d": 6
+     }
+    ],
+    "joiner": "=",
+    "arrows": {
+     "top": "×2",
+     "bottom": "×2"
+    },
+    "anim": "arrows"
+   }
+  },
+  {
+   "id": "s09",
+   "speaker": "kid",
+   "text": "I see it in the bars! The pieces get smaller, but we take more of them, so it is still the same amount.",
+   "audio": "u08-fractions/s09.mp3",
+   "durationSec": 8.35,
+   "srcHash": "783af35937a1e88f9da21bb2af6f0629b8f2ff7c",
+   "scene": {
+    "type": "fracBars",
+    "bars": [
+     {
+      "n": 2,
+      "d": 3,
+      "label": "2/3"
+     },
+     {
+      "n": 4,
+      "d": 6,
+      "label": "4/6",
+      "color": "blue"
+     }
+    ],
+    "anim": "shade"
+   }
+  },
+  {
+   "id": "s10",
+   "speaker": "teacher",
+   "text": "Why must it be the same number? Because times four on top and times four on the bottom is really multiplying by four quarters. And four quarters is one whole! Multiplying by one changes nothing.",
+   "audio": "u08-fractions/s10.mp3",
+   "durationSec": 13.73,
+   "srcHash": "dd83e6b52b23bf7a4e29c209c6cb8ba1f143b611",
+   "scene": {
+    "type": "fracBars",
+    "bars": [
+     {
+      "n": 4,
+      "d": 4,
+      "label": "4/4"
+     }
+    ],
+    "anim": "shade"
+   }
+  },
+  {
+   "id": "s11",
+   "speaker": "teacher",
+   "text": "It works backwards too. Divide top and bottom by the same number to simplify. Twelve eighteenths, divided by six on top and bottom, is two thirds.",
+   "audio": "u08-fractions/s11.mp3",
+   "durationSec": 10.99,
+   "srcHash": "b89daafbc3ad9ee68a870e9cf638ed6965ac2bf3",
+   "scene": {
+    "type": "fracNotation",
+    "items": [
+     {
+      "n": 12,
+      "d": 18
+     },
+     {
+      "n": 2,
+      "d": 3
+     }
+    ],
+    "joiner": "=",
+    "arrows": {
+     "top": "÷6",
+     "bottom": "÷6"
+    },
+    "anim": "arrows"
+   }
+  },
+  {
+   "id": "s12",
+   "speaker": "kid",
+   "text": "Smallest possible numbers, same amount. That is called the simplest form!",
+   "audio": "u08-fractions/s12.mp3",
+   "durationSec": 6.84,
+   "srcHash": "1e334af037c4d1a3541975c1ffd65f49e2bc1289",
+   "scene": {
+    "type": "fracNotation",
+    "items": [
+     {
+      "n": 2,
+      "d": 3
+     }
+    ],
+    "emphasis": "both",
+    "anim": "appear"
+   }
+  },
+  {
+   "id": "s13",
+   "speaker": "teacher",
+   "text": "Here is my favourite proof. On the number line, one half and two quarters sit at exactly the same spot. Equivalent fractions always share one spot.",
+   "audio": "u08-fractions/s13.mp3",
+   "durationSec": 11.02,
+   "srcHash": "aee5608eea3e44d5a1aed7f9f6376d810e571b4b",
+   "scene": {
+    "type": "numberLine",
+    "min": 0,
+    "max": 1,
+    "step": 0.25,
+    "marks": [
+     {
+      "v": 0.5,
+      "label": "1/2"
+     },
+     {
+      "v": 0.5,
+      "label": "2/4"
+     }
+    ],
+    "pointer": {
+     "v": 0.5
+    },
+    "hopFrom": 0,
+    "anim": "hop"
+   }
+  },
+  {
+   "id": "s14",
+   "speaker": "teacher",
+   "text": "Your turn, Maisie. Three fifths equals how many twentieths?",
+   "audio": "u08-fractions/s14.mp3",
+   "durationSec": 5.3,
+   "srcHash": "d4334a167bd8337a3667891b44a138d25552353b",
+   "scene": {
+    "type": "fracNotation",
+    "items": [
+     {
+      "n": 3,
+      "d": 5
+     },
+     {
+      "n": "□",
+      "d": 20
+     }
+    ],
+    "joiner": "=",
+    "anim": "appear"
+   }
+  },
+  {
+   "id": "s15",
+   "speaker": "kid",
+   "text": "The bottom went from five to twenty, that is times four. So the top is three times four. Twelve! Three fifths equals twelve twentieths.",
+   "audio": "u08-fractions/s15.mp3",
+   "durationSec": 12.74,
+   "srcHash": "2a4f8dbbd3170d104e9f89b3ecf579b6ededd228",
+   "scene": {
+    "type": "fracNotation",
+    "items": [
+     {
+      "n": 3,
+      "d": 5
+     },
+     {
+      "n": 12,
+      "d": 20
+     }
+    ],
+    "joiner": "=",
+    "arrows": {
+     "top": "×4",
+     "bottom": "×4"
+    },
+    "anim": "arrows"
+   }
+  },
+  {
+   "id": "s16",
+   "speaker": "teacher",
+   "text": "One more challenge. Are three quarters and nine twelfths equivalent? Look at the bars and decide.",
+   "audio": "u08-fractions/s16.mp3",
+   "durationSec": 7.25,
+   "srcHash": "5e9ce81f462b18425bdaa8edaee42cd65cf1ad0b",
+   "scene": {
+    "type": "compare",
+    "left": {
+     "n": 3,
+     "d": 4,
+     "color": "blue"
+    },
+    "right": {
+     "n": 9,
+     "d": 12
+    },
+    "symbol": "?",
+    "anim": "appear"
+   }
+  },
+  {
+   "id": "s17",
+   "speaker": "kid",
+   "text": "Times three on top, times three on the bottom. Yes, they are equivalent! And the bars shade to exactly the same length.",
+   "audio": "u08-fractions/s17.mp3",
+   "durationSec": 10.46,
+   "srcHash": "9093450001f566fdabc143176bd6c9ca7cc48095",
+   "scene": {
+    "type": "compare",
+    "left": {
+     "n": 3,
+     "d": 4,
+     "color": "blue"
+    },
+    "right": {
+     "n": 9,
+     "d": 12
+    },
+    "symbol": "=",
+    "anim": "reveal"
+   }
+  },
+  {
+   "id": "s18",
+   "speaker": "teacher",
+   "text": "Brilliant work! Remember the golden rule. Multiply or divide top and bottom by the same number, and the amount never changes. Now off you go and practise!",
+   "audio": "u08-fractions/s18.mp3",
+   "durationSec": 11.57,
+   "srcHash": "a3cdda3234c36dae17d03c9423a6630a81a29e7c",
+   "scene": {
+    "type": "titleCard",
+    "title": "Same amount, different name!",
+    "sub": "You've got this ⭐",
+    "emoji": "⭐"
+   }
+  }
+ ]
+}

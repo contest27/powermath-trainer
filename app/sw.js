@@ -1,7 +1,14 @@
 // Precaching service worker. Bump CACHE_VERSION on every deploy so clients
 // pick up new content; old caches are cleared on activate.
 
-const CACHE_VERSION = 'pmtrainer-v4';
+const CACHE_VERSION = 'pmtrainer-v5';
+
+// Watch-episode MP3s live in their own long-lived cache that SURVIVES
+// CACHE_VERSION bumps (they are content-addressed by episode folder and never
+// change under the same path). Do not add this to the activate delete list —
+// evicting it would break offline audio on every deploy.
+// Must match MEDIA_CACHE in js/ui/watch-audio.js.
+const MEDIA_CACHE = 'pmtrainer-media-v1';
 
 const ASSETS = [
   './',
@@ -23,6 +30,12 @@ const ASSETS = [
   './js/ui/map.js',
   './js/ui/session.js',
   './js/ui/parent.js',
+  './js/ui/watch.js',
+  './js/ui/watch-scenes.js',
+  './js/ui/watch-audio.js',
+  './js/engine/watch.js',
+  './js/content/watch-index.js',
+  './data/watch/u08-fractions.json',
   './js/qa/tutor.js',
   './js/content/gen.js',
   './js/content/vis.js',
@@ -46,7 +59,9 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_VERSION).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(
+        keys.filter((k) => k !== CACHE_VERSION && k !== MEDIA_CACHE).map((k) => caches.delete(k)),
+      ))
       .then(() => self.clients.claim()),
   );
 });
@@ -76,14 +91,19 @@ self.addEventListener('fetch', (e) => {
   }
 
   // Everything else: cache first, then network (updating the cache as we go).
+  // Never cache redirected or partial (206/Range) responses — the Cache API
+  // rejects 206, and a redirect target must not shadow an app path. MP3s go
+  // to the long-lived media cache; everything else to the versioned cache.
   e.respondWith(
     caches.match(e.request).then(
       (hit) =>
         hit ||
         fetch(e.request).then((res) => {
-          if (res.ok) {
+          const isRange = e.request.headers.has('range') || res.status === 206;
+          if (res.ok && !res.redirected && !isRange) {
             const copy = res.clone();
-            caches.open(CACHE_VERSION).then((c) => c.put(e.request, copy));
+            const target = url.pathname.endsWith('.mp3') ? MEDIA_CACHE : CACHE_VERSION;
+            caches.open(target).then((c) => c.put(e.request, copy));
           }
           return res;
         }),

@@ -24,11 +24,24 @@ async function run() {
       check: await import('../js/engine/check.js'),
       progress: await import('../js/engine/progress.js'),
       content: await import('../js/content/index.js'),
+      watch: await import('../js/engine/watch.js'),
+      watchIndex: await import('../js/content/watch-index.js'),
+      watchScenes: await import('../js/ui/watch-scenes.js'),
     };
   } catch (e) {
     results.push({ name: 'MODULE IMPORTS', ok: false, err: String(e) });
     report();
     return;
+  }
+  let shippedEpisode = null;
+  let swText = '';
+  let watchAudioText = '';
+  try {
+    shippedEpisode = await (await fetch('../data/watch/u08-fractions.json')).json();
+    swText = await (await fetch('../sw.js')).text();
+    watchAudioText = await (await fetch('../js/ui/watch-audio.js')).text();
+  } catch (e) {
+    results.push({ name: 'EPISODE/SW FETCH', ok: false, err: String(e) });
   }
   const { makeRng, seedFromString, ri, shuffle } = mods.rng;
   const { dayKey, addDays, daysBetween, defaultState, exportJSON, parseImport } = mods.storage;
@@ -290,6 +303,214 @@ async function run() {
     eq(NEW_TOPIC_TIERS[0], 1);
     eq(NEW_TOPIC_TIERS[NEW_TOPIC_TIERS.length - 1], 3);
     ok(NEW_TOPIC_TIERS.every((t, i, a) => i === 0 || t >= a[i - 1]), 'ramp not monotone');
+  });
+
+  // ---------------- watch episodes (pure core)
+  const {
+    seqInit, seqPlay, seqPause, seqNext, seqPrev, seqRestart,
+    validateScene, validateEpisode, markWatched, noteStep,
+  } = mods.watch;
+  const { EPISODES, episodeForUnit, episodeById } = mods.watchIndex;
+
+  // Minimal well-formed episode covering all five scene types.
+  const epFix = () => ({
+    id: 'ep-test', title: 'Test episode', unit: 8, topicIds: ['u08-equivalent'],
+    voices: { teacher: 'en-GB-SoniaNeural', kid: 'en-GB-MaisieNeural' },
+    speakers: { teacher: 'Miss Sonia', kid: 'Maisie' },
+    steps: [
+      { id: 's01', speaker: 'teacher', text: 'Hello!', audio: 'ep-test/s01.mp3',
+        scene: { type: 'titleCard', title: 'Equivalent fractions', sub: 'Unit 8', emoji: '🍫' } },
+      { id: 's02', speaker: 'kid', text: 'One half!', audio: 'ep-test/s02.mp3',
+        scene: { type: 'fracBars', bars: [{ n: 1, d: 2, label: '1/2' }], anim: 'shade' } },
+      { id: 's03', speaker: 'teacher', text: 'Split it.', audio: 'ep-test/s03.mp3',
+        scene: { type: 'fracBars', bars: [{ n: 2, d: 4, splitFrom: 2 }], anim: 'split' } },
+      { id: 's04', speaker: 'kid', text: 'Same spot.', audio: 'ep-test/s04.mp3',
+        scene: { type: 'numberLine', min: 0, max: 1, step: 0.25, marks: [{ v: 0.5, label: '1/2' }], pointer: { v: 0.5 }, hopFrom: 0, anim: 'hop' } },
+      { id: 's05', speaker: 'teacher', text: 'Equal?', audio: 'ep-test/s05.mp3',
+        scene: { type: 'compare', left: { n: 3, d: 4 }, right: { n: 9, d: 12 }, symbol: '=', anim: 'reveal' } },
+      { id: 's06', speaker: 'teacher', text: 'Two thirds equals four sixths.', audio: 'ep-test/s06.mp3',
+        scene: { type: 'fracNotation', items: [{ n: 2, d: 3 }, { n: 4, d: 6 }], joiner: '=', arrows: { top: '×2', bottom: '×2' }, anim: 'arrows' } },
+    ],
+  });
+
+  test('watch: defaultState has watched and legacy states gain it', () => {
+    eq(defaultState().watched, {});
+    const legacy = JSON.parse(JSON.stringify(defaultState()));
+    delete legacy.watched;
+    const merged = Object.assign(defaultState(), legacy);
+    ok(merged.watched && typeof merged.watched === 'object', 'shallow merge should restore watched');
+  });
+
+  test('watch: sequencer advances and detects the end', () => {
+    let s = seqInit(3);
+    eq(s, { count: 3, idx: 0, status: 'idle' });
+    s = seqPlay(s);
+    eq(s.status, 'playing');
+    s = seqNext(s); eq([s.idx, s.status], [1, 'playing']);
+    s = seqNext(s); eq([s.idx, s.status], [2, 'playing']);
+    s = seqNext(s); eq(s.status, 'ended');
+    ok(s.idx <= 2, 'idx must never exceed count-1');
+    eq(seqNext(s).status, 'ended', 'next on ended stays ended');
+    eq(seqPlay(s).status, 'ended', 'play on ended stays ended (restart is the path)');
+  });
+
+  test('watch: sequencer prev clamps and leaves ended', () => {
+    let s = seqInit(3);
+    eq(seqPrev(s).idx, 0, 'prev at 0 stays 0');
+    s = seqPlay(s); s = seqNext(s); s = seqNext(s); s = seqNext(s);
+    eq(s.status, 'ended');
+    const back = seqPrev(s);
+    eq([back.idx, back.status], [2, 'paused']);
+  });
+
+  test('watch: sequencer restart and pause toggle', () => {
+    let s = seqPlay(seqInit(2));
+    s = seqPause(s); eq(s.status, 'paused');
+    s = seqPlay(s); eq(s.status, 'playing');
+    s = seqNext(s); s = seqNext(s); eq(s.status, 'ended');
+    s = seqRestart(s); eq([s.idx, s.status], [0, 'playing']);
+    eq(seqPause(seqInit(2)).status, 'idle', 'pause only affects playing');
+  });
+
+  test('watch: validateEpisode accepts a well-formed episode', () => {
+    const res = validateEpisode(epFix());
+    eq(res.errors, [], 'unexpected errors');
+    ok(res.ok);
+  });
+
+  test('watch: validateEpisode rejects broken episodes', () => {
+    const broken = [
+      (e) => { e.steps[1].id = 's01'; return 's01'; },
+      (e) => { e.steps[2].speaker = 'ghost'; return 's03'; },
+      (e) => { e.steps[3].text = '  '; return 's04'; },
+      (e) => { delete e.steps[4].audio; return 's05'; },
+      (e) => { e.steps[5].scene = { type: 'pieChart' }; return 's06'; },
+    ];
+    for (const mutate of broken) {
+      const e = epFix();
+      const id = mutate(e);
+      const res = validateEpisode(e);
+      ok(!res.ok, 'should reject mutated episode');
+      ok(res.errors.some((msg) => msg.includes(id)), `error should name ${id}: ${res.errors.join(' | ')}`);
+    }
+  });
+
+  test('watch: validateScene enforces per-type fields', () => {
+    ok(validateScene({ type: 'fracBars', bars: [] }).length, 'no bars');
+    ok(validateScene({ type: 'fracBars', bars: [{ n: 1, d: 2 }, { n: 1, d: 3 }, { n: 1, d: 4 }] }).length, 'three bars');
+    ok(validateScene({ type: 'fracBars', bars: [{ n: 5, d: 4 }] }).length, 'n > d');
+    ok(validateScene({ type: 'fracBars', bars: [{ n: 1, d: 4, splitFrom: 3 }] }).length, 'splitFrom must divide d');
+    ok(validateScene({ type: 'numberLine', min: 1, max: 1 }).length, 'max <= min');
+    ok(validateScene({ type: 'compare', left: { n: 1, d: 2 }, symbol: '=' }).length, 'missing right');
+    ok(validateScene({ type: 'titleCard' }).length, 'title missing');
+    ok(validateScene({ type: 'fracBars', bars: [{ n: 1, d: 2 }], anim: 'hop' }).length, 'anim from wrong type');
+    eq(validateScene({ type: 'titleCard', title: 'Hi' }), []);
+    eq(validateScene({ type: 'fracBars', bars: [{ n: 0, d: 4 }] }), []);
+    eq(validateScene({ type: 'fracNotation', items: [{ n: 1, d: 2 }] }), []);
+    eq(validateScene({ type: 'numberLine', min: 0, max: 1 }), []);
+    eq(validateScene({ type: 'compare', left: { n: 1, d: 2 }, right: { n: 2, d: 4 }, symbol: '?' }), []);
+  });
+
+  test('watch: registry resolves units and topics', () => {
+    eq(episodeForUnit(8).id, 'u08-fractions');
+    eq(episodeForUnit(9), null);
+    eq(episodeById('u08-fractions').unit, 8);
+    for (const e of EPISODES) {
+      for (const tid of e.topicIds) ok(topicById(tid), `${e.id}: unknown topic ${tid}`);
+      ok(topics.some((t) => t.unit === e.unit), `${e.id}: no topics in unit ${e.unit}`);
+    }
+  });
+
+  test('watch: shipped episode passes validateEpisode', () => {
+    ok(shippedEpisode, 'episode JSON did not load');
+    const res = validateEpisode(shippedEpisode);
+    eq(res.errors, [], 'shipped episode has errors');
+    ok(shippedEpisode.steps.length >= 12, 'episode suspiciously short');
+    ok(shippedEpisode.steps.every((st) => st.audio.startsWith(shippedEpisode.id + '/')),
+      'audio paths must live under the episode folder');
+    ok(shippedEpisode.steps.every((st) => st.durationSec > 0), 'unrendered step (durationSec 0)');
+  });
+
+  test('watch: registry entry matches the shipped episode', () => {
+    ok(shippedEpisode, 'episode JSON did not load');
+    const reg = episodeById(shippedEpisode.id);
+    ok(reg, 'shipped episode not in registry');
+    eq(reg.title, shippedEpisode.title);
+    eq(reg.unit, shippedEpisode.unit);
+    eq(reg.file, shippedEpisode.id + '.json');
+    const mins = shippedEpisode.steps.reduce((a, st) => a + st.durationSec, 0) / 60;
+    ok(Math.abs(reg.minutes - mins) <= 1, `registry minutes (${reg.minutes}) drifted from actual (${mins.toFixed(1)})`);
+  });
+
+  test('watch: every shipped step renders', () => {
+    ok(shippedEpisode, 'episode JSON did not load');
+    for (const st of shippedEpisode.steps) {
+      const svg = mods.watchScenes.renderScene(st.scene);
+      ok(svg && svg.namespaceURI === 'http://www.w3.org/2000/svg', st.id + ': did not render');
+    }
+  });
+
+  test('watch: renderScene builds SVG for all five types', () => {
+    const { renderScene } = mods.watchScenes;
+    const specs = [
+      { type: 'titleCard', title: 'Hello', sub: 'Unit 8', emoji: '🍫' },
+      { type: 'fracBars', bars: [{ n: 3, d: 4, label: '3/4' }], anim: 'shade' },
+      { type: 'fracNotation', items: [{ n: 2, d: 3 }, { n: 4, d: 6 }], joiner: '=', arrows: { top: '×2', bottom: '×2' }, anim: 'arrows' },
+      { type: 'numberLine', min: 0, max: 1, step: 0.25, marks: [{ v: 0.5, label: '1/2' }, { v: 0.5, label: '2/4' }], pointer: { v: 0.5 }, hopFrom: 0, anim: 'hop' },
+      { type: 'compare', left: { n: 3, d: 4 }, right: { n: 9, d: 12 }, symbol: '=', anim: 'reveal' },
+    ];
+    for (const spec of specs) {
+      const svg = renderScene(spec);
+      eq(svg.namespaceURI, 'http://www.w3.org/2000/svg', spec.type + ': not SVG namespace');
+      eq(svg.getAttribute('viewBox'), '0 0 320 240', spec.type + ': wrong viewBox');
+      ok(svg.querySelectorAll('*').length > 2, spec.type + ': suspiciously empty scene');
+    }
+    const bars = renderScene({ type: 'fracBars', bars: [{ n: 3, d: 4 }] });
+    eq(bars.querySelectorAll('.fb-cell').length, 4, 'cell count should equal d');
+    eq(bars.querySelectorAll('.fb-cell.shaded').length, 3, 'shaded count should equal n');
+  });
+
+  test('watch: split renders the new dividers', () => {
+    const svg = mods.watchScenes.renderScene({ type: 'fracBars', bars: [{ n: 2, d: 4, splitFrom: 2 }], anim: 'split' });
+    eq(svg.querySelectorAll('.fb-div-new').length, 2, 'expected d - splitFrom new dividers');
+    eq(svg.querySelectorAll('.fb-cell').length, 2, 'base cells render at splitFrom granularity');
+    eq(svg.querySelectorAll('.fb-cell.shaded').length, 1, '2/4 shades one base cell');
+  });
+
+  test('watch: scene palette matches vis.js', () => {
+    const { colorFor } = mods.watchScenes;
+    eq(colorFor('green'), '#86efac');
+    eq(colorFor('blue'), '#7dd3fc');
+    eq(colorFor('yellow'), '#fcd34d');
+    eq(colorFor('red'), '#fca5a5');
+    eq(colorFor('purple'), '#c4b5fd');
+    eq(colorFor('nonsense'), '#86efac', 'unknown colors fall back to green');
+  });
+
+  test('watch: sw assets and media cache are consistent', () => {
+    ok(swText, 'sw.js did not load');
+    const needed = [
+      './js/ui/watch.js', './js/ui/watch-scenes.js', './js/ui/watch-audio.js',
+      './js/engine/watch.js', './js/content/watch-index.js', './data/watch/u08-fractions.json',
+    ];
+    for (const p of needed) ok(swText.includes(`'${p}'`), 'sw.js ASSETS missing ' + p);
+    ok(swText.includes("'pmtrainer-media-v1'"), 'sw.js missing the media cache name');
+    ok(watchAudioText.includes("'pmtrainer-media-v1'"), 'watch-audio.js media cache literal drifted');
+    ok(!swText.includes("'pmtrainer-v4'"), 'CACHE_VERSION was not bumped');
+    const assetsBlock = swText.slice(swText.indexOf('const ASSETS'), swText.indexOf('];'));
+    ok(assetsBlock.length > 0 && !assetsBlock.includes('.mp3'),
+      'MP3s must not be precached (they belong to the media cache)');
+  });
+
+  test('watch: markWatched and noteStep', () => {
+    const s = defaultState();
+    noteStep(s, 'u08-fractions', 5);
+    eq(s.watched['u08-fractions'], { completedAt: null, lastStep: 5 });
+    markWatched(s, 'u08-fractions', 17, '2026-07-23T10:00:00Z');
+    eq(s.watched['u08-fractions'], { completedAt: '2026-07-23T10:00:00Z', lastStep: 17 });
+    noteStep(s, 'u08-fractions', 3);
+    eq(s.watched['u08-fractions'].completedAt, '2026-07-23T10:00:00Z', 'noteStep must not clear completion');
+    eq(s.watched['u08-fractions'].lastStep, 3);
   });
 
   report();

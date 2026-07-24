@@ -14,6 +14,15 @@ Project-scope memory. Cross-project lessons go to `~/.claude/MEMORY.md`.
 - **2026-07-20 — Adaptivity.** EWMA mastery 0–100 per topic; Leitner gaps
   1/3/7 days by band (<60 / 60–85 / >85); diagnostic seeds strand-level priors
   (40 + 45 × fraction correct). Misses on easier tiers weigh more.
+- **2026-07-23 — Watch episodes (video-like explainers) are in-app animations,
+  not MP4s.** Decision by Sebastian after rejecting audio-only podcasts:
+  scene player (`watch-scenes.js`, 5 SVG primitives in the vis.js palette) +
+  per-step MP3 narration (edge-tts, en-GB Sonia/Maisie, free and keyless) on
+  ONE reused `<audio>` element with blob URLs. `vis.js` untouched (string
+  builders without hooks; 65 call sites). MP3s live in the deploy-surviving
+  `pmtrainer-media-v1` cache, whitelisted in sw.js activate. edge-tts is the
+  first pip dependency of tools/ (`tools/narrate.py`); rendering needs the
+  sandbox disabled (network), `--check` does not.
 
 ## Learnings
 

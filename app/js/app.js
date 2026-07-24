@@ -3,6 +3,7 @@ import './ui/today.js';
 import './ui/map.js';
 import './ui/session.js';
 import './ui/parent.js';
+import './ui/watch.js';
 
 mount(document.getElementById('root'));
 go('today');

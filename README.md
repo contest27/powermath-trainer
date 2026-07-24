@@ -22,6 +22,10 @@ no backend. Deployable to GitHub Pages as-is.
 - **Question types**: number pad, multiple choice, true/false, fraction entry,
   tap-to-order — all touch-first. One retry with a hint, then a friendly
   explanation.
+- **Watch episodes**: narrated, animated in-app explainers (video-like: scenes
+  auto-advance with the narration, pausable and steppable). One per unit is
+  the goal; unit 8 (equivalent fractions) ships first. Reachable from the
+  Today card and the map; audio is cached for offline after the first watch.
 - **Q&A**: pre-written FAQ chips per topic (offline); optionally an AI tutor
   (Claude Haiku) once a parent enters an Anthropic API key in the Parent corner.
   The key lives only on the device and is stripped from backups.
@@ -77,16 +81,22 @@ No Node.js required.
   covering the engine, checker, and a 3,840-question property sweep across
   every generator. All must pass.
 - **Regenerate icons**: `python3 tools/make_icons.py` (needs Pillow).
+- **Render Watch narration**: `python3 tools/narrate.py app/data/watch/<episode>.json`
+  (needs `pip install edge-tts` and network; free, keyless). `--check` validates
+  offline, `--force` re-renders everything. The episode JSON is the single
+  source of truth; the tool writes durations/hashes back and skips unchanged
+  steps.
 
 ## Layout
 
 ```
 app/                  the deployed site (served as-is)
-  js/engine/          rng, storage, mastery model, scheduler, checker, progress
-  js/content/         32 topic modules + diagnostic + SVG visual builders
-  js/ui/              screens (today, session, map, parent) + components
+  js/engine/          rng, storage, mastery model, scheduler, checker, progress, watch core
+  js/content/         32 topic modules + diagnostic + SVG visual builders + episode registry
+  js/ui/              screens (today, session, map, parent, watch) + components + scene renderer
   js/qa/tutor.js      browser-direct Claude call (BYO key)
+  data/watch/         Watch episodes: JSON (source of truth) + MP3 narration snippets
   tests/              browser test runner
-tools/                Python dev tooling (server, icons)
+tools/                Python dev tooling (server, icons, narration renderer)
 quality_reports/      plans, session logs (project framework)
 ```

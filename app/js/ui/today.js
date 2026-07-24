@@ -4,6 +4,7 @@ import { planSession } from '../engine/scheduler.js';
 import { dayKey, daysBetween } from '../engine/storage.js';
 import { makeRng, seedFromString } from '../engine/rng.js';
 import { topicOrder, topicById } from '../content/index.js';
+import { episodeForUnit } from '../content/watch-index.js';
 import { startOrResume } from './session.js';
 
 registerScreen('today', () => {
@@ -38,6 +39,7 @@ registerScreen('today', () => {
   const plan = planSession(st, topicOrder, today, rng);
 
   const card = h('div', { class: 'card today-card' });
+  let watchEp = null;
   if (resumable) {
     card.append(h('h2', {}, 'Session in progress'),
       h('p', {}, 'You were part-way through. Pick up where you left off!'));
@@ -49,6 +51,8 @@ registerScreen('today', () => {
     card.append(h('h2', {}, "Today's topic"),
       h('p', { class: 'topic-name' }, t.emoji + ' ' + t.title),
       plan.review.length ? h('p', { class: 'muted' }, 'Plus a quick review of earlier topics.') : null);
+    const ep = episodeForUnit(t.unit);
+    if (ep && !st.watched[ep.id]?.completedAt) watchEp = ep;
   } else {
     card.append(h('h2', {}, 'Review day 💪'),
       h('p', {}, 'All topics done — time to make them stick!'));
@@ -56,6 +60,12 @@ registerScreen('today', () => {
 
   card.append(h('button', { class: 'btn primary wide big start', onclick: startOrResume },
     resumable ? 'Continue ▶' : doneToday ? 'Practise again ▶' : 'Start ▶'));
+  if (watchEp) {
+    card.append(h('button', {
+      class: 'btn subtle wide watch-cta',
+      onclick: () => go('watch', { episodeId: watchEp.id, from: 'today' }),
+    }, `▶ Watch first: ${watchEp.title} (~${watchEp.minutes} min)`));
+  }
   if (doneToday && !resumable) {
     card.append(h('p', { class: 'muted center-t' }, '✅ Done for today — extra practice is always welcome!'));
   }

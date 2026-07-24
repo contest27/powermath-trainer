@@ -37,6 +37,7 @@ export function defaultState() {
     history: [],      // { day, kind, topicId, total, correct, minutes }
     attempts: [],     // { d, t, tier, ok }
     qaLog: [],        // { day, topicId, q, a, source }
+    watched: {},      // episodeId -> { completedAt, lastStep } (Watch episodes)
     lastExport: null,
     activeSession: null, // serialized in-progress session so a closed tab resumes
   };

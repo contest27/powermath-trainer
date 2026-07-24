@@ -17,6 +17,8 @@ step or npm dependencies without an explicit decision logged in MEMORY.md.
 | Serve locally | `python3 tools/serve.py 8124` (no-cache; SW skipped on localhost) |
 | Tests | open `http://localhost:8124/tests/tests.html` — must show 0 failed |
 | Icons | `python3 tools/make_icons.py` |
+| Watch-Narration rendern | `python3 tools/narrate.py app/data/watch/<episode>.json` (braucht Netz + `pip install edge-tts`) |
+| Watch-Episode prüfen | `python3 tools/narrate.py app/data/watch/<episode>.json --check` (offline) |
 | Deploy | push to `main`; Pages workflow publishes `app/` |
 
 ## Non-negotiables
@@ -35,6 +37,13 @@ step or npm dependencies without an explicit decision logged in MEMORY.md.
    yearly overview (17 units, books 5A/5B/5C). Method vocabulary (exchange,
    bar model, column method) matches the classroom. Do not rename topics or
    invent units.
+6. **Watch episodes**: the episode JSON goes into `ASSETS` (precache); the
+   MP3 snippets deliberately do NOT — they are runtime-cached into
+   `pmtrainer-media-v1`, which is whitelisted in the SW `activate` handler so
+   it survives `CACHE_VERSION` bumps. Never add it to the delete list, never
+   precache MP3s. Watch is enrichment only: no coupling to
+   scheduler/mastery. New episode = JSON + MP3s + registry entry in
+   `watch-index.js` + JSON path in `ASSETS`.
 
 ## Canonical sources
 
