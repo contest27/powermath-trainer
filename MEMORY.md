@@ -29,11 +29,20 @@ Project-scope memory. Cross-project lessons go to `~/.claude/MEMORY.md`.
   `ui/map-scene.js` + shared `ui/svg.js` (s/di extracted from watch-scenes);
   32 stations in topicOrder, 10 regions from contiguous strand runs, fog after
   the current region, chest opens at 32/32. Mastery band moved into the coin
-  ring colour (bandDot stays parent-corner only); toast is the station
-  popover; Watch signs stay unit-scoped (two signs for unit 8, parity with the
-  old list). The v5→v6 SW bump doubles as the real-world probe that
-  `pmtrainer-media-v1` survives version bumps — record the outcome after the
-  iPad check.
+  ring colour (bandDot stays parent-corner only); Watch signs stay unit-scoped
+  (two signs for unit 8, parity with the old list). The v5→v6 SW bump doubles
+  as the real-world probe that `pmtrainer-media-v1` survives version bumps —
+  record the outcome after the iPad check.
+- **2026-07-24 — Tap a map station to practise that topic.** A confirm sheet
+  (not the old toast) launches focused practice: current topic → explanation
+  then the 11-item ramp (completes the topic, advances the journey); completed
+  topic → 8 adaptive review items (no completion change). Scope = completed +
+  current only; far/locked stay under the fog. Runs in a NEW top-level
+  `focusSession` slot (boot-cleared, precedence over `activeSession`) so a
+  half-finished daily lesson is never destroyed; pure logic in leaf `ui/focus.js`
+  (buildFocusSession/applySessionEnd/stationAction), engine untouched. Streak:
+  focus-new counts, focus-review does not. Same-day topic pacing is
+  deliberately uncapped (summer catch-up). SW v7.
 
 ## Learnings
 

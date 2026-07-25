@@ -29,6 +29,7 @@ async function run() {
       watchScenes: await import('../js/ui/watch-scenes.js'),
       svg: await import('../js/ui/svg.js'),
       mapScene: await import('../js/ui/map-scene.js'),
+      focus: await import('../js/ui/focus.js'),
     };
   } catch (e) {
     results.push({ name: 'MODULE IMPORTS', ok: false, err: String(e) });
@@ -301,6 +302,122 @@ async function run() {
     }
   });
 
+  // ---------------- focused practice (map-launched)
+  const { buildFocusSession, applySessionEnd, stationAction } = mods.focus;
+  const D = '2026-07-24';
+  function seededState(n) {
+    const st = defaultState();
+    st.diagnosticDone = true;
+    for (const id of topicOrder) st.mastery[id] = newMastery(70);
+    st.completed = topicOrder.slice(0, n);
+    return st;
+  }
+  const answerAll = (s, ok = true) => s.items.map((it) => ({ part: it.part, topicId: it.topicId, ok }));
+
+  test('focus: new session builds explanation + 11 practice items, no review', () => {
+    const st = seededState(3);
+    const cur = topicOrder[3];
+    const fs = buildFocusSession(st, cur, 'new', D, makeRng(1));
+    eq(fs.kind, 'focus-new');
+    eq(fs.phase, 'explain');
+    eq(fs.newTopic, cur);
+    eq(fs.items.length, 11);
+    ok(fs.items.every((it) => it.part === 'practice' && it.topicId === cur), 'all practice, one topic');
+    ok(fs.focus === true && fs.origin === 'map', 'focus flag + map origin');
+  });
+
+  test('focus: review session builds 8 adaptive items, no explanation', () => {
+    const st = seededState(4);
+    st.mastery[topicOrder[0]] = newMastery(30);
+    const fs = buildFocusSession(st, topicOrder[0], 'review', D, makeRng(2));
+    eq(fs.kind, 'focus-review');
+    eq(fs.phase, 'items');
+    eq(fs.newTopic, null);
+    eq(fs.focusTopic, topicOrder[0]);
+    eq(fs.items.length, 8);
+    ok(fs.items.every((it) => it.part === 'review'), 'all review items');
+    ok(fs.items.every((it) => [1, 2, 3].includes(it.q.tier)), 'tiers in range');
+  });
+
+  test('focus: completing a new current topic marks it completed and advances the journey', () => {
+    const st = seededState(3);
+    const cur = topicOrder[3];
+    const fs = buildFocusSession(st, cur, 'new', D, makeRng(3));
+    fs.results = answerAll(fs, true);
+    applySessionEnd(st, fs, D);
+    ok(st.completed.includes(cur), 'current topic completed');
+    eq(nextNewTopic(st, topicOrder), topicOrder[4], 'journey advances by one');
+    ok((st.stars[cur] ?? 0) >= 1, 'earns stars');
+    eq(fs.phase, 'summary');
+    ok(st.focusSession === fs, 'focus slot holds the finished session for its summary');
+  });
+
+  test('focus: completing a review does not change completed and reschedules', () => {
+    const st = seededState(4);
+    const id = topicOrder[1];
+    st.mastery[id].due = '2026-07-20';
+    const before = st.completed.slice();
+    const fs = buildFocusSession(st, id, 'review', D, makeRng(4));
+    fs.results = answerAll(fs, true);
+    applySessionEnd(st, fs, D);
+    eq(st.completed, before, 'completed unchanged');
+    ok(st.mastery[id].due > D, 'rescheduled into the future');
+    eq(fs.summary.stars, null, 'no stars for re-practice');
+  });
+
+  test('focus: a half-finished daily session survives a map review run', () => {
+    const st = seededState(4);
+    const daily = { kind: 'daily', newTopic: topicOrder[4], phase: 'items', focus: false, day: D };
+    st.activeSession = daily;
+    const fs = buildFocusSession(st, topicOrder[1], 'review', D, makeRng(5));
+    fs.results = answerAll(fs, true);
+    applySessionEnd(st, fs, D);
+    ok(st.activeSession === daily, 'daily lesson object untouched');
+    eq(st.activeSession.newTopic, topicOrder[4], 'daily still points at its topic');
+    ok(st.focusSession === fs, 'focus lives in its own slot');
+  });
+
+  test('focus: completing the current new topic drops the now-stale same-topic daily', () => {
+    const st = seededState(3);
+    const cur = topicOrder[3];
+    st.activeSession = { kind: 'daily', newTopic: cur, phase: 'explain', focus: false, day: D };
+    const fs = buildFocusSession(st, cur, 'new', D, makeRng(6));
+    fs.results = answerAll(fs, true);
+    applySessionEnd(st, fs, D);
+    ok(st.completed.includes(cur), 'topic completed');
+    eq(st.activeSession, null, 'stale same-topic daily dropped');
+  });
+
+  test('focus: return target is the map, daily falls back to today', () => {
+    const fs = buildFocusSession(seededState(3), topicOrder[3], 'new', D, makeRng(7));
+    eq(fs.origin, 'map');
+    const dailyLike = { kind: 'daily' };
+    eq(dailyLike.origin ?? 'today', 'today');
+    eq(fs.origin ?? 'today', 'map');
+  });
+
+  test('map: stationAction routes done->review, current->new, locked->toast', () => {
+    const st = seededState(3);
+    eq(stationAction(st, topicById(topicOrder[0]), 'done').mode, 'review');
+    eq(stationAction(st, topicById(topicOrder[3]), 'current').mode, 'new');
+    eq(stationAction(st, topicById(topicOrder[7]), 'locked').kind, 'toast');
+  });
+
+  test('map: stationAction sends everything to a toast until the diagnostic is done', () => {
+    const st = defaultState();
+    eq(stationAction(st, topicById(topicOrder[0]), 'current').kind, 'toast');
+    eq(stationAction(st, topicById(topicOrder[0]), 'done').kind, 'toast');
+  });
+
+  test('focus: sw precaches focus.js and the version was bumped', () => {
+    ok(swText, 'sw.js did not load');
+    ok(swText.includes("'./js/ui/focus.js'"), 'sw.js ASSETS missing focus.js');
+    ok(!swText.includes("'pmtrainer-v6'"), 'CACHE_VERSION was not bumped for the map-practice release');
+    for (const p of ["'./js/ui/session.js'", "'./js/ui/map.js'", "'./js/ui/core.js'", "'./css/app.css'"]) {
+      ok(swText.includes(p), 'sw.js ASSETS unexpectedly dropped ' + p);
+    }
+  });
+
   test('session tiers: practice ramp is easy to hard', () => {
     eq(NEW_TOPIC_TIERS[0], 1);
     eq(NEW_TOPIC_TIERS[NEW_TOPIC_TIERS.length - 1], 3);
@@ -341,6 +458,14 @@ async function run() {
     delete legacy.watched;
     const merged = Object.assign(defaultState(), legacy);
     ok(merged.watched && typeof merged.watched === 'object', 'shallow merge should restore watched');
+  });
+
+  test('focus: defaultState carries an empty focusSession slot', () => {
+    eq(defaultState().focusSession, null);
+    const legacy = JSON.parse(JSON.stringify(defaultState()));
+    delete legacy.focusSession;
+    const merged = Object.assign(defaultState(), legacy);
+    ok('focusSession' in merged && merged.focusSession === null, 'shallow merge should restore focusSession');
   });
 
   test('watch: sequencer advances and detects the end', () => {

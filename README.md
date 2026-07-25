@@ -35,7 +35,9 @@ no backend. Deployable to GitHub Pages as-is.
   topics as stations on a dashed route through themed strand regions, a
   bobbing ship on the current topic, fog over future lands, stars and
   mastery-ring colours on completed coins, and a treasure chest that opens
-  at 32/32.
+  at 32/32. Tap the current or a completed station to jump straight into a
+  focused practice for that topic (the current topic plays its explanation
+  first); locked topics stay under the fog.
 - **PWA**: installable to the home screen, works offline after first load.
 
 ## Deploying to GitHub Pages

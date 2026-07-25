@@ -6,6 +6,11 @@ import './ui/parent.js';
 import './ui/watch.js';
 
 mount(document.getElementById('root'));
+
+// Focused map practice is a same-run bonus: never resume it across reloads,
+// so it can never shadow a resumable daily lesson on the next launch.
+if (store.state.focusSession) { store.state.focusSession = null; store.save(); }
+
 go('today');
 
 // Offline support once served over http(s). Skipped on localhost so local

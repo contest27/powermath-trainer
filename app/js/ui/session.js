@@ -4,13 +4,12 @@ import {
   progressBar, starRow, confettiBurst,
 } from './components.js';
 import { planSession, NEW_TOPIC_TIERS } from '../engine/scheduler.js';
-import {
-  recordAttempt, completeTopic, rescheduleReviewed, finishSession, applyDiagnostic,
-} from '../engine/progress.js';
+import { recordAttempt } from '../engine/progress.js';
 import { checkAnswer, answerText } from '../engine/check.js';
 import { dayKey } from '../engine/storage.js';
 import { makeRng, seedFromString, pick } from '../engine/rng.js';
-import { topics, topicOrder, topicById, diagnosticItems } from '../content/index.js';
+import { topicOrder, topicById, diagnosticItems } from '../content/index.js';
+import { buildFocusSession, applySessionEnd } from './focus.js';
 import { askTutor } from '../qa/tutor.js';
 import * as tts from '../tts.js';
 
@@ -67,9 +66,30 @@ export function startOrResume() {
   go('session');
 }
 
-function sess() { return store.state.activeSession; }
+// Launch a one-topic practice from the map. Lives in its own state slot so a
+// half-finished daily lesson in activeSession is never disturbed.
+export function startFocusSession(topicId, mode) {
+  const today = dayKey();
+  const rng = makeRng(seedFromString(today + '|focus|' + topicId + '|' + Date.now()));
+  store.state.focusSession = buildFocusSession(store.state, topicId, mode, today, rng);
+  store.save();
+  go('session');
+}
+
+// The focus slot takes precedence: while a map practice runs, the daily lesson
+// waits untouched in activeSession.
+function sess() { return store.state.focusSession ?? store.state.activeSession; }
 
 function persist() { store.save(); }
+
+// Leave a session without finishing it. Focus practice is discarded (its
+// per-item attempts were already recorded live); the daily lesson stays
+// resumable, so it is only navigated away from.
+function exitSession(s) {
+  tts.stop();
+  if (s.focus) { store.state.focusSession = null; store.save(); }
+  go(s.origin ?? 'today');
+}
 
 // ---------------------------------------------------------------- screen
 
@@ -86,7 +106,7 @@ registerScreen('session', () => {
 function explainView(s) {
   const topic = topicById(s.newTopic);
   const wrap = h('div', { class: 'screen' });
-  wrap.append(headerBar('New topic', { onBack: () => { tts.stop(); go('today'); } }));
+  wrap.append(headerBar('New topic', { onBack: () => exitSession(s) }));
 
   const card = h('div', { class: 'card lesson' });
   card.append(h('h1', { class: 'lesson-title' }, topic.title));
@@ -220,7 +240,7 @@ function itemView(s) {
   const q = item.q;
   const wrap = h('div', { class: 'screen' });
   wrap.append(headerBar(PART_LABEL[item.part], {
-    onBack: () => { tts.stop(); go('today'); },
+    onBack: () => exitSession(s),
     right: h('span', { class: 'count' }, `${s.idx + 1}/${s.items.length}`),
   }));
   wrap.append(progressBar(s.idx, s.items.length));
@@ -326,33 +346,7 @@ function recordResult(s, item, firstTryOk) {
 
 function endItems(s) {
   if (s.phase !== 'summary') {
-    // Apply end-of-session effects exactly once.
-    const practice = s.results.filter((r) => r.part === 'practice');
-    const review = s.results.filter((r) => r.part === 'review');
-    if (s.kind === 'diagnostic') {
-      applyDiagnostic(store.state, s.diag, topics, s.day);
-      s.summary = { kind: 'diagnostic' };
-    } else {
-      let stars = null;
-      if (s.newTopic && practice.length) {
-        stars = completeTopic(store.state, s.newTopic, practice.filter((r) => r.ok).length, practice.length, s.day);
-      }
-      const reviewedIds = [...new Set(review.map((r) => r.topicId))];
-      rescheduleReviewed(store.state, reviewedIds, s.day);
-      s.summary = {
-        kind: s.kind, stars,
-        practice: { ok: practice.filter((r) => r.ok).length, total: practice.length },
-        review: { ok: review.filter((r) => r.ok).length, total: review.length },
-      };
-    }
-    const minutes = Math.max(1, Math.round((Date.now() - s.startedAt) / 60000));
-    const all = s.results;
-    finishSession(store.state, {
-      kind: s.kind, topicId: s.newTopic,
-      total: all.length, correct: all.filter((r) => r.ok).length, minutes,
-    }, s.day);
-    s.phase = 'summary';
-    store.state.activeSession = s; // finishSession cleared it; keep for the summary screen
+    applySessionEnd(store.state, s, s.day); // completion effects + slot bookkeeping
     persist();
   }
   return summaryView(s);
@@ -385,7 +379,12 @@ function summaryView(s) {
   }
   card.append(h('button', {
     class: 'btn primary wide big',
-    onclick: () => { store.state.activeSession = null; store.save(); go('today'); },
+    onclick: () => {
+      if (s.focus) store.state.focusSession = null;
+      else store.state.activeSession = null;
+      store.save();
+      go(s.origin ?? 'today');
+    },
   }, 'Finish'));
   wrap.append(card);
   confettiBurst(wrap);

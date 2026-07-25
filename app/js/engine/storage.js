@@ -39,7 +39,8 @@ export function defaultState() {
     qaLog: [],        // { day, topicId, q, a, source }
     watched: {},      // episodeId -> { completedAt, lastStep } (Watch episodes)
     lastExport: null,
-    activeSession: null, // serialized in-progress session so a closed tab resumes
+    activeSession: null, // serialized daily lesson so a closed tab resumes
+    focusSession: null,  // map-launched focused practice (bonus; cleared at boot)
   };
 }
 

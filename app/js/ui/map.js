@@ -7,6 +7,35 @@ import { bottomNav, progressBar, confettiBurst } from './components.js';
 import { topics, STRANDS } from '../content/index.js';
 import { episodeForUnit } from '../content/watch-index.js';
 import { buildTreasureMap } from './map-scene.js';
+import { stationAction } from './focus.js';
+import { startFocusSession } from './session.js';
+
+// Confirm sheet before a station launches practice — the map is a tall
+// scrollable SVG, so a bare tap is too easy to trigger by accident, and the
+// current station's action completes a topic.
+function stationSheet(topic, status, mode) {
+  const close = () => scrim.remove();
+  const stars = store.state.stars[topic.id] ?? 0;
+  const scrim = h('div', {
+    class: 'sheet-scrim', role: 'dialog', 'aria-modal': 'true', tabindex: '-1',
+    onclick: (e) => { if (e.target === scrim) close(); },
+    onkeydown: (e) => { if (e.key === 'Escape') close(); },
+  });
+  const sheet = h('div', { class: 'card station-sheet' },
+    h('div', { class: 'sheet-title' }, `${topic.emoji} ${topic.shortTitle}`),
+    status === 'done'
+      ? h('div', { class: 'sheet-stars' }, '★'.repeat(stars) + '☆'.repeat(Math.max(0, 3 - stars)))
+      : h('p', { class: 'muted center-t' }, 'Your next island — start the lesson!'),
+    h('button', {
+      class: 'btn primary wide big',
+      onclick: () => { close(); startFocusSession(topic.id, mode); },
+    }, status === 'current' ? '▶ Start' : '▶ Practise'),
+    h('button', { class: 'btn subtle wide', onclick: close }, 'Not now'),
+  );
+  scrim.append(sheet);
+  document.body.append(scrim);
+  scrim.focus();
+}
 
 registerScreen('map', () => {
   const st = store.state;
@@ -19,14 +48,9 @@ registerScreen('map', () => {
     state: st,
     episodeForUnit,
     onStation: (t, status) => {
-      if (status === 'done') {
-        const n = st.stars[t.id] ?? 0;
-        toast(`${t.emoji} ${t.shortTitle}  ${'★'.repeat(n)}${'☆'.repeat(Math.max(0, 3 - n))}`);
-      } else if (status === 'current') {
-        toast(`⛵ Next adventure: ${t.shortTitle}`);
-      } else {
-        toast(`🔒 ${t.shortTitle} — sail here later!`);
-      }
+      const action = stationAction(st, t, status);
+      if (action.kind === 'toast') { toast(action.msg); return; }
+      stationSheet(t, status, action.mode);
     },
     onWatch: (ep) => go('watch', { episodeId: ep.id, from: 'map' }),
   });
@@ -35,7 +59,8 @@ registerScreen('map', () => {
     h('div', { class: 'row spread' },
       h('b', {}, '🏴‍☠️ Treasure hunt'),
       h('span', {}, `${doneCount}/${topics.length}`)),
-    progressBar(doneCount, topics.length)));
+    progressBar(doneCount, topics.length),
+    h('p', { class: 'muted center-t map-hint' }, 'Tap your ship or a gold coin to practise that topic.')));
   wrap.append(h('div', { class: 'card tmap-card' }, svg));
   wrap.append(bottomNav('map', go));
 
