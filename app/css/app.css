@@ -112,8 +112,11 @@ h1, h2, h3 { margin: 0 0 8px; }
 .qa-thread { max-height: 300px; overflow-y: auto; }
 .bubble { border-radius: 14px; padding: 10px 14px; margin: 8px 0; max-width: 92%; line-height: 1.5; }
 .bubble.kid { background: #e0f2fe; margin-left: auto; }
-.bubble.tutor { background: #f1f5f9; display: flex; gap: 8px; align-items: flex-start; }
+.bubble.tutor { background: #f1f5f9; display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
 .bubble.thinking { color: var(--muted); font-style: italic; }
+.tutor-stream { flex: 1; min-width: 0; }
+.tutor-stream.thinking { color: var(--muted); font-style: italic; }
+.tutor-note { flex-basis: 100%; color: var(--muted); font-size: 0.85rem; }
 .qa-inputrow { display: flex; gap: 8px; margin-top: 8px; }
 .qa-input { flex: 1; border: 2px solid var(--line); border-radius: 12px; padding: 10px 12px; }
 .qa-note { color: var(--muted); font-size: 0.92rem; }

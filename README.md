@@ -28,7 +28,8 @@ no backend. Deployable to GitHub Pages as-is.
   Today card and the map; audio is cached for offline after the first watch.
 - **Q&A**: pre-written FAQ chips per topic (offline); optionally an AI tutor
   (Claude Haiku) once a parent enters an Anthropic API key in the Parent corner.
-  The key lives only on the device and is stripped from backups.
+  Answers stream in word by word rather than appearing all at once. The key
+  lives only on the device and is stripped from backups.
 - **Parent corner** (long-press the ⚙️): mastery heatmap, session history,
   AI question log, voice settings, backup export/import, reset.
 - **Treasure map**: the map screen is one hand-drawn SVG pirate map — all 32

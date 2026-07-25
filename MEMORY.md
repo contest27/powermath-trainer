@@ -44,6 +44,16 @@ Project-scope memory. Cross-project lessons go to `~/.claude/MEMORY.md`.
   focus-new counts, focus-review does not. Same-day topic pacing is
   deliberately uncapped (summer catch-up). SW v7.
 
+- **2026-07-24 — AI tutor answers stream.** `qa/tutor.js` `askTutor` gained an
+  optional `onText` callback: with it, the call uses `stream: true` and a raw
+  SSE reader (`drainSSE`/`textDelta`, exported + unit-tested) that hands each
+  `text_delta` to the callback; without it, the original non-streaming path is
+  byte-identical (keeps `testKey` simple). `TutorError` kinds preserved; a
+  mid-stream `error`/`refusal` event maps into one. `session.js` qaBox fills the
+  tutor bubble live via `textContent` (tutor emits plain text — no escapeHtml
+  needed). Model stays `claude-haiku-4-5` (no thinking/effort). Pattern copied
+  from the Facharzttrainer `ai.js` `streamMessage`. SW v8.
+
 ## Learnings
 
 - [LEARN:web] The embedded browser pane serves **stale ES modules from the HTTP

@@ -34,16 +34,48 @@ export class TutorError extends Error {
   }
 }
 
-export async function askTutor({ question, topic, apiKey }) {
+// Pull every complete SSE event out of `buffer`. Events are separated by a
+// blank line; only `data:` lines carry JSON. Returns the parsed events plus
+// the leftover `rest` (a half-received event that spans reader chunks).
+// Pure and exported so the tests can feed it split buffers.
+export function drainSSE(buffer) {
+  const events = [];
+  let sep;
+  while ((sep = buffer.indexOf('\n\n')) !== -1) {
+    const chunk = buffer.slice(0, sep);
+    buffer = buffer.slice(sep + 2);
+    for (const line of chunk.split('\n')) {
+      if (!line.startsWith('data:')) continue;
+      const payload = line.slice(5).trim();
+      if (!payload || payload === '[DONE]') continue;
+      try { events.push(JSON.parse(payload)); } catch { /* skip malformed chunk */ }
+    }
+  }
+  return { events, rest: buffer };
+}
+
+// The incremental text of a streamed event, or null for anything else.
+export function textDelta(ev) {
+  return ev && ev.type === 'content_block_delta' && ev.delta?.type === 'text_delta'
+    ? ev.delta.text
+    : null;
+}
+
+const FALLBACK_ANSWER = 'I am not sure about that one — ask a parent!';
+
+export async function askTutor({ question, topic, apiKey, onText = null }) {
   // Deliberately NOT gated on navigator.onLine. That flag is unreliable —
   // installed iOS web apps can report false while the network works fine —
   // so refusing to try would strand a perfectly good setup. Always attempt
   // the request; the flag is only used to word a failure afterwards.
 
+  const streaming = typeof onText === 'function';
+
   // Built outside the try: a bug here must not masquerade as a network failure.
   const body = JSON.stringify({
     model: MODEL,
     max_tokens: 300,
+    stream: streaming,
     system: systemPrompt(topic),
     messages: [{ role: 'user', content: question }],
   });
@@ -68,6 +100,8 @@ export async function askTutor({ question, topic, apiKey }) {
     });
   }
 
+  // A bad key, billing problem, etc. surfaces here — before any stream — as a
+  // non-ok status with a JSON error body, exactly as in the non-streaming path.
   if (!res.ok) {
     let detail = '';
     try {
@@ -79,13 +113,40 @@ export async function askTutor({ question, topic, apiKey }) {
     throw new TutorError('http', { status: res.status, detail });
   }
 
-  const data = await res.json();
-  const text = (data.content ?? [])
-    .filter((b) => b.type === 'text')
-    .map((b) => b.text)
-    .join(' ')
-    .trim();
-  return text || 'I am not sure about that one — ask a parent!';
+  if (!streaming) {
+    const data = await res.json();
+    const text = (data.content ?? [])
+      .filter((b) => b.type === 'text')
+      .map((b) => b.text)
+      .join(' ')
+      .trim();
+    return text || FALLBACK_ANSWER;
+  }
+
+  // Streaming: read the SSE body, hand each text fragment to onText, and
+  // accumulate the full answer to return once the stream ends.
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let full = '';
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const { events, rest } = drainSSE(buffer);
+    buffer = rest;
+    for (const ev of events) {
+      const piece = textDelta(ev);
+      if (piece != null) { full += piece; onText(piece); continue; }
+      if (ev.type === 'error') {
+        throw new TutorError('http', { status: ev.error?.status ?? null, detail: ev.error?.message || 'stream error' });
+      }
+      if (ev.type === 'message_delta' && ev.delta?.stop_reason === 'refusal') {
+        throw new TutorError('bad-response', { detail: 'refused' });
+      }
+    }
+  }
+  return full.trim() || FALLBACK_ANSWER;
 }
 
 // Used by the parent corner to validate a freshly entered key.

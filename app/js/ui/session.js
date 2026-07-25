@@ -192,17 +192,37 @@ function qaBox(topic) {
       if (!q) return;
       input.value = '';
       addBubble('kid', escapeHtml(q));
-      const wait = h('div', { class: 'bubble tutor thinking' }, 'Thinking…');
-      thread.append(wait);
+      // The tutor bubble fills in as the answer streams in, so the child sees
+      // words appear instead of a frozen "Thinking…". Plain text only (the
+      // tutor never emits markup), so textContent is both safe and simplest.
+      const textEl = h('div', { class: 'tutor-stream thinking' }, 'Thinking…');
+      const bubble = h('div', { class: 'bubble tutor' }, textEl);
+      thread.append(bubble);
+      thread.scrollTop = thread.scrollHeight;
       askBtn.disabled = true;
+      let streamed = '';
       try {
-        const a = await askTutor({ question: q, topic, apiKey: store.state.settings.apiKey });
-        wait.remove();
-        addBubble('tutor', escapeHtml(a));
-        logQa(topic, q, a, 'ai');
+        const answer = await askTutor({
+          question: q, topic, apiKey: store.state.settings.apiKey,
+          onText: (piece) => {
+            if (!streamed) textEl.classList.remove('thinking');
+            streamed += piece;
+            textEl.textContent = streamed;
+            thread.scrollTop = thread.scrollHeight;
+          },
+        });
+        textEl.classList.remove('thinking');
+        textEl.textContent = answer;            // exact final text (trimmed / fallback)
+        bubble.append(speakerButton(answer, { small: true }));
+        logQa(topic, q, answer, 'ai');
       } catch (e) {
-        wait.remove();
-        addBubble('tutor', escapeHtml(friendlyTutorError(e)));
+        if (streamed.trim()) {
+          textEl.classList.remove('thinking');
+          bubble.append(h('div', { class: 'tutor-note' }, '… oops, that got cut off — try asking again.'));
+        } else {
+          bubble.remove();
+          addBubble('tutor', escapeHtml(friendlyTutorError(e)));
+        }
       }
       askBtn.disabled = false;
     };

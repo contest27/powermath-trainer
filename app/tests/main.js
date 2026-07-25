@@ -30,6 +30,7 @@ async function run() {
       svg: await import('../js/ui/svg.js'),
       mapScene: await import('../js/ui/map-scene.js'),
       focus: await import('../js/ui/focus.js'),
+      tutor: await import('../js/qa/tutor.js'),
     };
   } catch (e) {
     results.push({ name: 'MODULE IMPORTS', ok: false, err: String(e) });
@@ -416,6 +417,62 @@ async function run() {
     for (const p of ["'./js/ui/session.js'", "'./js/ui/map.js'", "'./js/ui/core.js'", "'./css/app.css'"]) {
       ok(swText.includes(p), 'sw.js ASSETS unexpectedly dropped ' + p);
     }
+  });
+
+  // ---------------- streaming tutor (SSE parser)
+  const { drainSSE, textDelta } = mods.tutor;
+  const delta = (t) => `data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"${t}"}}\n\n`;
+
+  test('tutor: drainSSE reads one text delta, no leftover', () => {
+    const { events, rest } = drainSSE(delta('Hi'));
+    eq(events.length, 1);
+    eq(rest, '');
+    eq(textDelta(events[0]), 'Hi');
+  });
+
+  test('tutor: drainSSE reads several events from one buffer', () => {
+    const { events } = drainSSE(delta('One') + delta('Two') + delta('Three'));
+    eq(events.map(textDelta), ['One', 'Two', 'Three']);
+  });
+
+  test('tutor: drainSSE carries a split event across chunks', () => {
+    const whole = delta('Split');
+    const cut = 22; // mid-event, before the \n\n
+    const a = drainSSE(whole.slice(0, cut));
+    eq(a.events.length, 0);
+    ok(a.rest.length > 0, 'partial event kept as leftover');
+    const b = drainSSE(a.rest + whole.slice(cut));
+    eq(b.events.length, 1);
+    eq(textDelta(b.events[0]), 'Split');
+  });
+
+  test('tutor: drainSSE skips blank data, [DONE], and non-text events', () => {
+    const s = 'data: \n\ndata: [DONE]\n\n'
+      + 'event: ping\ndata: {"type":"ping"}\n\n'
+      + 'data: {"type":"message_start","message":{}}\n\n';
+    const { events } = drainSSE(s);
+    ok(!events.some((e) => e.type === 'ping' && false), 'sanity');
+    eq(events.map((e) => e.type), ['ping', 'message_start'], 'blank + [DONE] drop, others parse');
+    ok(events.every((e) => textDelta(e) === null), 'none are text deltas');
+  });
+
+  test('tutor: drainSSE surfaces an error event', () => {
+    const { events } = drainSSE('event: error\ndata: {"type":"error","error":{"message":"overloaded"}}\n\n');
+    eq(events[0].type, 'error');
+    eq(events[0].error.message, 'overloaded');
+  });
+
+  test('tutor: textDelta only unwraps text_delta blocks', () => {
+    eq(textDelta({ type: 'content_block_delta', delta: { type: 'text_delta', text: 'x' } }), 'x');
+    eq(textDelta({ type: 'content_block_delta', delta: { type: 'input_json_delta' } }), null);
+    eq(textDelta({ type: 'message_stop' }), null);
+    eq(textDelta(null), null);
+  });
+
+  test('tutor: drainSSE ignores a malformed data line', () => {
+    const { events } = drainSSE('data: {not json\n\n' + delta('ok'));
+    eq(events.length, 1);
+    eq(textDelta(events[0]), 'ok');
   });
 
   test('session tiers: practice ramp is easy to hard', () => {

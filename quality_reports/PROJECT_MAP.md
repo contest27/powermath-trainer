@@ -1,25 +1,23 @@
 # PowerMath Trainer — Project Map
 
-**Status:** v1 + Watch + Schatzkarte LIVE (sw v6) · Karten-Übung gebaut & verifiziert (sw v7), wartet auf Commit-Go
+**Status:** v1 + Watch + Schatzkarte + Karten-Übung LIVE (sw v7) · Streaming-Tutor gebaut & verifiziert (sw v8), wartet auf Commit-Go
 **Last updated:** 2026-07-24
 
 ## Recent (updated 2026-07-24)
 
-**Active workstream — Thema von der Schatzkarte üben** (*Tap auf eine Station startet
-eine fokussierte Übung: aktuelles Thema → Erklärung + 11er-Ramp (schließt ab); erledigt
-→ 8 adaptive Wiederholungen*). Gebaut, verifiziert: 95/95 Tests, echte Screen-Durchläufe
-im 768×1024-Viewport, **Tageslektion-Isolation** (eigener `focusSession`-Slot) und
-Daily-Regression bestätigt. Offen: Commit-Go (sw v7).
+**Active workstream — Streaming-Tutor** (*KI-Tutor-Antworten tröpfeln Wort für Wort
+statt zu warten — Facharzttrainer-SSE-Muster, PowerMath-Fehlersemantik erhalten*).
+Gebaut, verifiziert: 102/102 Tests (7 SSE-Parser), askTutor-Kern + qaBox end-to-end
+per gemocktem Stream (kein echter Key nötig). Offen: Commit-Go (sw v8).
 
-1. [[quality_reports/session_logs/2026-07-24_map-practice|📄 Session-Log Karten-Übung]] — Verlauf + volle Verifikation. **Start here.**
-2. [[quality_reports/plans/2026-07-24_map-practice|Approved plan]] — focusSession-Slot, Umfang, Streak-/Tempo-Semantik.
-3. [[quality_reports/session_logs/2026-07-24_treasure-map|Session-Log Schatzkarte]] — die Karte selbst (deployt, sw v6).
-4. [[MEMORY|Project memory]] — Entscheidungen 2026-07-23 (Watch) + 2026-07-24 (Schatzkarte, Karten-Übung, iOS-Zweistart).
+1. [[quality_reports/session_logs/2026-07-24_streaming-tutor|📄 Session-Log Streaming-Tutor]] — Verlauf + Verifikation. **Start here.**
+2. [[quality_reports/plans/2026-07-24_streaming-tutor|Approved plan]] — onText-Zweig, drainSSE, UI-Streaming.
+3. [[quality_reports/session_logs/2026-07-24_map-practice|Session-Log Karten-Übung]] — Vorfeature (sw v7).
+4. [[MEMORY|Project memory]] — Entscheidungen 2026-07-23/24 (Watch, Schatzkarte, Karten-Übung, Streaming-Tutor, iOS-Zweistart).
 
-**Open for Sebastian:** Karten-Übung im Browser testen (localhost:8124 → Map → Station
-tippen) und „commit" geben · **weiterhin offen aus dem Vortag:** iPad-Media-Cache-Probe
-(Flugmodus → Watch-Episode ohne Nachladen) · nächste Übernahme wählen (Streaming-Tutor,
-KI-Buddy, Freitags-Challenge).
+**Open for Sebastian:** „commit" für den Streaming-Tutor · auf dem iPad mit gültigem
+(bezahltem) API-Key den Live-Durchlauf sehen · **weiter offen:** Media-Cache-Probe
+(Flugmodus → Watch-Episode ohne Nachladen) · nächste Übernahme (KI-Buddy, Freitags-Challenge).
 
 *(Die Schatzkarten-Optik ist abgenommen und deployt; die Media-Cache-Probe steht noch.)*
 
