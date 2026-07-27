@@ -21,6 +21,35 @@ function systemPrompt(topic) {
   ].join('\n');
 }
 
+// System prompt for the global buddy: general helper that stays kid-friendly and
+// steers back to maths. When a practice question is on screen, it gets the stem
+// (never the answer) and is told to guide, not solve. Pure + exported for tests.
+export function buddySystemPrompt(ctx = {}) {
+  const bits = [
+    'You are "Buddy", a warm, encouraging helper for a child who has just finished Year 5 (age 10) using a UK Power Maths practice app.',
+    'Rules:',
+    '- You mainly help with maths. You may answer one short friendly side question, then gently steer back to maths.',
+    '- Keep answers under 90 words, in simple, warm language a 10-year-old understands. Plain sentences only: no markdown, no headings, no lists.',
+    '- Use the school\'s methods: place value, bar models, column method with exchange, short division. Give one small example where it helps.',
+    '- When helping with the question on screen, GUIDE with a hint or the first step and a question back — do not just give the final answer.',
+  ];
+  if (ctx.topicName) bits.push(`The child is currently on the topic: ${ctx.topicName}.`);
+  if (ctx.stem) bits.push(`The question on their screen is: "${ctx.stem}". Help them think it through; do not simply give the answer.`);
+  return bits.join('\n');
+}
+
+// The Messages API request body. Pure + exported so the system override and the
+// haiku/max_tokens defaults are unit-testable without a fetch.
+export function buildRequestBody({ question, topic, system = null, streaming }) {
+  return {
+    model: MODEL,
+    max_tokens: 300,
+    stream: streaming,
+    system: system ?? systemPrompt(topic),
+    messages: [{ role: 'user', content: question }],
+  };
+}
+
 // Errors carry: kind ('offline' | 'blocked' | 'http' | 'bad-response'),
 // status (HTTP code) and detail (the API's own message) so the parent corner
 // can show exactly what went wrong instead of a vague catch-all.
@@ -63,7 +92,7 @@ export function textDelta(ev) {
 
 const FALLBACK_ANSWER = 'I am not sure about that one — ask a parent!';
 
-export async function askTutor({ question, topic, apiKey, onText = null }) {
+export async function askTutor({ question, topic, apiKey, onText = null, system = null }) {
   // Deliberately NOT gated on navigator.onLine. That flag is unreliable —
   // installed iOS web apps can report false while the network works fine —
   // so refusing to try would strand a perfectly good setup. Always attempt
@@ -72,13 +101,8 @@ export async function askTutor({ question, topic, apiKey, onText = null }) {
   const streaming = typeof onText === 'function';
 
   // Built outside the try: a bug here must not masquerade as a network failure.
-  const body = JSON.stringify({
-    model: MODEL,
-    max_tokens: 300,
-    stream: streaming,
-    system: systemPrompt(topic),
-    messages: [{ role: 'user', content: question }],
-  });
+  // A caller-supplied `system` (the buddy) wins over the topic tutor prompt.
+  const body = JSON.stringify(buildRequestBody({ question, topic, system, streaming }));
 
   let res;
   try {

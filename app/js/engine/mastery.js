@@ -8,13 +8,16 @@ export function newMastery(initialScore = 50) {
   return { score: clamp(initialScore), attempts: 0, correct: 0, lastSeen: null, due: null, box: 1 };
 }
 
-export function updateMastery(m, tier, ok) {
+export function updateMastery(m, tier, ok, opts = {}) {
   const wRight = [0.20, 0.17, 0.14][tier - 1] ?? 0.17;
   const wWrong = [0.30, 0.26, 0.20][tier - 1] ?? 0.26;
-  const w = ok ? wRight : wWrong;
+  // Answering with buddy help gives half credit: the upward move is halved,
+  // so an assisted-correct never lifts the score as much as an independent one.
+  // A wrong answer stays fully wrong — help only softens the correct case.
+  const w = ok ? (opts.assisted ? wRight / 2 : wRight) : wWrong;
   m.score = clamp(Math.round(m.score * (1 - w) + (ok ? 100 : 0) * w));
   m.attempts += 1;
-  if (ok) m.correct += 1;
+  if (ok && !opts.assisted) m.correct += 1; // "correct" counts independent successes only
   return m;
 }
 

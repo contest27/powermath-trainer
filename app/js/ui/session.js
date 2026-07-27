@@ -10,6 +10,7 @@ import { dayKey } from '../engine/storage.js';
 import { makeRng, seedFromString, pick } from '../engine/rng.js';
 import { topicOrder, topicById, diagnosticItems } from '../content/index.js';
 import { buildFocusSession, applySessionEnd } from './focus.js';
+import { createChat } from './chat.js';
 import { askTutor } from '../qa/tutor.js';
 import * as tts from '../tts.js';
 
@@ -167,87 +168,29 @@ function segmentEl(seg) {
 // --------------------------------------------------------------------- Q&A box
 
 function qaBox(topic) {
-  const box = h('div', { class: 'qabox' }, h('h3', {}, 'Questions?'));
-  const thread = h('div', { class: 'qa-thread' });
-
-  const addBubble = (who, html) => {
-    thread.append(h('div', { class: 'bubble ' + who },
-      h('div', { html }), who === 'tutor' ? speakerButton(html, { small: true }) : null));
-    thread.scrollTop = thread.scrollHeight;
-  };
+  const hasKey = !!store.state.settings.apiKey;
+  const chat = createChat({
+    ask: hasKey
+      ? (q, { onText }) => askTutor({ question: q, topic, apiKey: store.state.settings.apiKey, onText })
+      : null,
+    onExchange: (q, a) => logQa(topic, q, a, 'ai'),
+  });
 
   const chips = h('div', { class: 'chips' },
     (topic.faqs ?? []).map((f) =>
       h('button', {
         class: 'chip',
-        onclick: () => { addBubble('kid', f.q); addBubble('tutor', f.a); logQa(topic, f.q, f.a, 'faq'); },
+        onclick: () => { chat.addBubble('kid', f.q); chat.addBubble('tutor', f.a); logQa(topic, f.q, f.a, 'faq'); },
       }, f.q)));
-  box.append(chips, thread);
 
-  if (store.state.settings.apiKey) {
-    const input = h('input', { class: 'qa-input', placeholder: 'Type your own question…', maxlength: '200' });
-    const askBtn = h('button', { class: 'btn primary' }, 'Ask');
-    const ask = async () => {
-      const q = input.value.trim();
-      if (!q) return;
-      input.value = '';
-      addBubble('kid', escapeHtml(q));
-      // The tutor bubble fills in as the answer streams in, so the child sees
-      // words appear instead of a frozen "Thinking…". Plain text only (the
-      // tutor never emits markup), so textContent is both safe and simplest.
-      const textEl = h('div', { class: 'tutor-stream thinking' }, 'Thinking…');
-      const bubble = h('div', { class: 'bubble tutor' }, textEl);
-      thread.append(bubble);
-      thread.scrollTop = thread.scrollHeight;
-      askBtn.disabled = true;
-      let streamed = '';
-      try {
-        const answer = await askTutor({
-          question: q, topic, apiKey: store.state.settings.apiKey,
-          onText: (piece) => {
-            if (!streamed) textEl.classList.remove('thinking');
-            streamed += piece;
-            textEl.textContent = streamed;
-            thread.scrollTop = thread.scrollHeight;
-          },
-        });
-        textEl.classList.remove('thinking');
-        textEl.textContent = answer;            // exact final text (trimmed / fallback)
-        bubble.append(speakerButton(answer, { small: true }));
-        logQa(topic, q, answer, 'ai');
-      } catch (e) {
-        if (streamed.trim()) {
-          textEl.classList.remove('thinking');
-          bubble.append(h('div', { class: 'tutor-note' }, '… oops, that got cut off — try asking again.'));
-        } else {
-          bubble.remove();
-          addBubble('tutor', escapeHtml(friendlyTutorError(e)));
-        }
-      }
-      askBtn.disabled = false;
-    };
-    askBtn.addEventListener('click', ask);
-    input.addEventListener('keydown', (e) => e.key === 'Enter' && ask());
-    box.append(h('div', { class: 'qa-inputrow' }, input, askBtn));
-  } else {
-    box.append(h('p', { class: 'qa-note' }, 'Tap a question above — or ask Mum or Dad!'));
-  }
+  const box = h('div', { class: 'qabox' }, h('h3', {}, 'Questions?'), chips, chat.thread);
+  box.append(chat.inputRow ?? h('p', { class: 'qa-note' }, 'Tap a question above — or ask Mum or Dad!'));
   return box;
 }
 
 function logQa(topic, q, a, source) {
   store.state.qaLog.push({ day: dayKey(), topicId: topic.id, q, a, source });
   store.save();
-}
-
-function friendlyTutorError(e) {
-  if (e && e.status === 401) return 'The tutor key is not working — ask a parent to check it in the Parent corner.';
-  if (e && e.offline) return 'I need the internet to answer that one. Try a question from the list above!';
-  return 'Hmm, I could not answer just now. Try again in a moment, or ask a parent.';
-}
-
-function escapeHtml(s) {
-  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 // ------------------------------------------------------------------- item view
@@ -357,7 +300,12 @@ function recordResult(s, item, firstTryOk) {
     d.total += 1;
     if (firstTryOk) d.correct += 1;
   } else {
-    recordAttempt(store.state, item.topicId, item.q.tier, firstTryOk, s.day);
+    // item.assisted is set by the buddy when the child chose "help me" on this
+    // question. Booking it as assisted halves the upward mastery move (a wrong
+    // answer stays fully wrong). Help tapped after the answer resolves can't
+    // retro-dampen — recordResult has already run — which is fine: only help
+    // taken before answering counts.
+    recordAttempt(store.state, item.topicId, item.q.tier, firstTryOk, s.day, { assisted: !!item.assisted });
   }
   persist();
 }

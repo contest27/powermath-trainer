@@ -30,6 +30,11 @@ no backend. Deployable to GitHub Pages as-is.
   (Claude Haiku) once a parent enters an Anthropic API key in the Parent corner.
   Answers stream in word by word rather than appearing all at once. The key
   lives only on the device and is stripped from backups.
+- **AI Buddy**: with an API key, a floating help button is reachable everywhere
+  except the explanation screen. During a practice question it offers "help me /
+  side question" — answering *with help* gives half credit to the topic score
+  (so it comes round again sooner) while the lesson stars stay. Buddy chats are
+  saved on the device and shown in the Parent corner (🤝 marks a helped answer).
 - **Parent corner** (long-press the ⚙️): mastery heatmap, session history,
   AI question log, voice settings, backup export/import, reset.
 - **Treasure map**: the map screen is one hand-drawn SVG pirate map — all 32

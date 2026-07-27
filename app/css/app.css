@@ -278,6 +278,20 @@ h1, h2, h3 { margin: 0 0 8px; }
 
 .map-hint { margin-top: 8px; font-size: 0.82rem; }
 
+/* ---- buddy FAB + sheet ---- */
+.buddy-fab {
+  position: fixed; right: 16px; z-index: 55;
+  bottom: calc(76px + env(safe-area-inset-bottom));   /* clears bottom nav / sticky bar */
+  width: 60px; height: 60px; border-radius: 50%; border: 0;
+  background: var(--brand); color: #fff; box-shadow: var(--shadow);
+  display: grid; place-items: center;
+}
+.buddy-fab:active { transform: scale(0.94); }
+.buddy-sheet { max-height: 82vh; display: flex; flex-direction: column; }
+.buddy-sheet .qa-thread { flex: 1 1 auto; max-height: none; }
+.buddy-intent { margin: 2px 0 10px; justify-content: center; }
+.buddy-note { margin: 2px 0 10px; font-size: 0.85rem; }
+
 /* ---- station practice sheet ---- */
 .sheet-scrim {
   position: fixed; inset: 0; background: rgb(15 23 42 / 0.35); z-index: 60;

@@ -54,6 +54,24 @@ Project-scope memory. Cross-project lessons go to `~/.claude/MEMORY.md`.
   needed). Model stays `claude-haiku-4-5` (no thinking/effort). Pattern copied
   from the Facharzttrainer `ai.js` `streamMessage`. SW v8.
 
+- **2026-07-25 — Global AI Buddy.** Floating FAB + bottom-sheet chat, reachable
+  everywhere except the explanation screen (qaBox owns the chat there); on a
+  practice question an intent choice ("help me / side question"). MILD dampening:
+  `updateMastery(m, tier, ok, {assisted})` halves the *correct* EWMA weight
+  (`wRight/2`); wrong stays fully wrong; the review interval follows the score
+  band automatically (no schedule clamp); **stars stay** (results.ok unchanged).
+  Signal = `item.assisted` on the persisted session object (set live at tap by
+  `onAssist`, read by `recordResult`). Chat streaming extracted to leaf
+  `ui/chat.js` (`createChat({ask,onExchange})`), shared by qaBox + buddy;
+  `escapeHtml`/`friendlyTutorError` moved there. `buddySystemPrompt(ctx)` in
+  tutor.js (`askTutor` gained a `system` param); passes the question stem, never
+  the answer. Global chrome mounts once to `document.body` and refreshes via
+  `core.js onAfterRender`. New top-level `chats` (CHAT_CAP 100, backup-only).
+  Diagnostic guard is structural (no intent button in the warm-up, so a helped
+  answer can't inflate the seeded prior). Flaw B accepted: earlier review is
+  cumulative / band-crossing, not guaranteed per answer — that is what MILD
+  means. Model stays haiku. SW v9.
+
 ## Learnings
 
 - [LEARN:web] The embedded browser pane serves **stale ES modules from the HTTP

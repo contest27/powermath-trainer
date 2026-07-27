@@ -13,6 +13,11 @@ export function registerScreen(name, fn) { screens[name] = fn; }
 
 export function mount(el) { rootEl = el; }
 
+// Global chrome (the buddy FAB) subscribes here; every navigation fires it,
+// so persistent, out-of-#root elements can react without a per-screen hook.
+const afterRender = [];
+export function onAfterRender(fn) { afterRender.push(fn); }
+
 export function go(name, params = null) {
   current = { name, params };
   window.scrollTo(0, 0);
@@ -23,6 +28,7 @@ export function rerender() {
   if (!rootEl) return;
   const fn = screens[current.name];
   rootEl.replaceChildren(fn ? fn(current.params) : h('div', {}, 'Missing screen: ' + current.name));
+  for (const f of afterRender) f();
 }
 
 export function currentScreen() { return current.name; }

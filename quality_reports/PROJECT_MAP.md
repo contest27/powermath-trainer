@@ -1,33 +1,32 @@
 # PowerMath Trainer — Project Map
 
-**Status:** v1 + Watch + Schatzkarte + Karten-Übung LIVE (sw v7) · Streaming-Tutor gebaut & verifiziert (sw v8), wartet auf Commit-Go
-**Last updated:** 2026-07-24
+**Status:** v1 + Watch + Schatzkarte + Karten-Übung + Streaming-Tutor LIVE (sw v8) · KI-Buddy gebaut & verifiziert (sw v9), wartet auf Commit-Go
+**Last updated:** 2026-07-25
 
-## Recent (updated 2026-07-24)
+## Recent (updated 2026-07-25)
 
-**Active workstream — Streaming-Tutor** (*KI-Tutor-Antworten tröpfeln Wort für Wort
-statt zu warten — Facharzttrainer-SSE-Muster, PowerMath-Fehlersemantik erhalten*).
-Gebaut, verifiziert: 102/102 Tests (7 SSE-Parser), askTutor-Kern + qaBox end-to-end
-per gemocktem Stream (kein echter Key nötig). Offen: Commit-Go (sw v8).
+**Active workstream — KI-Buddy** (*schwebender 🦉-Hilfe-Knopf + Bottom-Sheet-Chat, überall
+außer Erklärungs-Screen; mit-Hilfe-gelöst dämpft den Score mild (halbe Gutschrift), Sterne
+bleiben*). Gebaut, verifiziert: **114 Tests grün**, end-to-end-Dämpfung im Browser gemessen
+(assisted +2 vs. normal +4 auf tier-3 ab Score 70), Sichtbarkeitsmatrix, Parent-Sektion,
+Backup-Roundtrip. Offen: Commit-Go (sw v9). Braucht bezahlten API-Key, um sichtbar zu sein.
 
-1. [[quality_reports/session_logs/2026-07-24_streaming-tutor|📄 Session-Log Streaming-Tutor]] — Verlauf + Verifikation. **Start here.**
-2. [[quality_reports/plans/2026-07-24_streaming-tutor|Approved plan]] — onText-Zweig, drainSSE, UI-Streaming.
-3. [[quality_reports/session_logs/2026-07-24_map-practice|Session-Log Karten-Übung]] — Vorfeature (sw v7).
-4. [[MEMORY|Project memory]] — Entscheidungen 2026-07-23/24 (Watch, Schatzkarte, Karten-Übung, Streaming-Tutor, iOS-Zweistart).
+1. [[quality_reports/session_logs/2026-07-25_ai-buddy|📄 Session-Log KI-Buddy]] — Verlauf + volle Verifikation. **Start here.**
+2. [[quality_reports/plans/2026-07-25_ai-buddy|Approved plan]] — Dämpfung mild, `item.assisted`-Signal, Diagnostik-Guard, Flaws.
+3. [[quality_reports/session_logs/2026-07-24_streaming-tutor|Streaming-Tutor]] · [[quality_reports/session_logs/2026-07-24_map-practice|Karten-Übung]] · [[quality_reports/session_logs/2026-07-24_treasure-map|Schatzkarte]] — die Vortags-Features (alle deployt).
+4. [[MEMORY|Project memory]] — Entscheidungen Watch/Schatzkarte/Karten-Übung/Streaming-Tutor/Buddy + iOS-Zweistart.
 
-**Open for Sebastian:** „commit" für den Streaming-Tutor · auf dem iPad mit gültigem
-(bezahltem) API-Key den Live-Durchlauf sehen · **weiter offen:** Media-Cache-Probe
-(Flugmodus → Watch-Episode ohne Nachladen) · nächste Übernahme (KI-Buddy, Freitags-Challenge).
+**Open for Sebastian:** Buddy im Browser testen (localhost:8124, Key im Parent Corner → Karte/Übungsfrage
+→ 🦉-Knopf) und „commit" geben · **iPad, weiter offen:** Media-Cache-Probe der Watch-Episode
+(Flugmodus, ohne Nachladen) · verbleibende Übernahme-Kandidaten: Freitags-Challenge, kuratierte Textaufgaben.
 
-*(Die Schatzkarten-Optik ist abgenommen und deployt; die Media-Cache-Probe steht noch.)*
+*(Fünf Features dieser Session: Watch, Schatzkarte, Karten-Übung, Streaming-Tutor live; der Buddy wartet auf Commit. Media-Cache-Probe steht noch.)*
 
-1. [[quality_reports/session_logs/2026-07-24_treasure-map|📄 Session-Log Schatzkarte]] — Verlauf + Verifikationsliste. **Start here.**
-2. [[quality_reports/plans/2026-07-24_treasure-map|Approved plan]] — Geometrie, Regionen, Fix-Liste F1–F7.
-3. [[quality_reports/session_logs/2026-07-23_watch-poc|Session-Log Watch-PoC]] — Vortag: Erklärfilm-Feature (deployt, sw v5, iPad bestätigt).
-4. [[MEMORY|Project memory]] — Entscheidungen 2026-07-23 (Watch) + 2026-07-24 (Schatzkarte, iOS-Zweistart-Lesson).
+<!-- Ältere Recent-Blöcke (Schatzkarte/Watch) siehe Git-History; Trail läuft über die Session-Logs oben. -->
 
-**Open for Sebastian:** iPad aktualisieren (zwei echte Starts) → Schatzkarte mit dem
-Sohn ansehen · **Media-Cache-Probe:** Flugmodus → Watch-Episode muss ohne Nachladen
+### Media-Cache-Probe (offen seit Schatzkarte)
+
+Auf dem iPad: Flugmodus → Watch-Episode muss ohne Nachladen
 spielen (v5→v6-Bump überlebt?) · Watch-Episode einmal komplett (Gestenkette +
 Stimmen-Urteil) · danach nächste Übernahme wählen (Streaming-Tutor, KI-Buddy,
 „Thema üben").

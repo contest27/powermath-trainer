@@ -112,6 +112,22 @@ registerScreen('parent', () => {
   }
   wrap.append(ai);
 
+  // ---- AI buddy chats ----
+  const chats = st.chats.slice(-12).reverse();
+  if (chats.length) {
+    const bud = section('Buddy chats');
+    bud.append(h('p', { class: 'muted' },
+      'The floating Buddy button answers quick questions anywhere. A 🤝 means he helped with a practice question — that answer counts for half towards the topic score (stars are unaffected), so the topic comes round again sooner.'));
+    for (const c of chats) {
+      const head = `${c.day} · ${c.view === 'question' ? '❓' : '💬'} ${c.topicName ?? 'General'}` + (c.assisted ? ' · 🤝 helped' : '');
+      bud.append(h('div', { class: 'qlog' },
+        h('div', { class: 'qlog-q' }, head),
+        h('div', { class: 'qlog-a muted' },
+          (c.messages ?? []).map((m) => h('div', {}, (m.role === 'kid' ? '🧒 ' : '🦉 ') + m.content)))));
+    }
+    wrap.append(bud);
+  }
+
   // ---- child & voice ----
   const pers = section('Child & voice');
   const nameIn = h('input', { class: 'text-in', placeholder: "Child's first name", value: st.settings.name || '' });

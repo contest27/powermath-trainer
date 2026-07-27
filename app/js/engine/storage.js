@@ -5,6 +5,7 @@ const KEY = 'pmtrainer.state.v1';
 const ATTEMPT_CAP = 4000;
 const QA_CAP = 200;
 const HISTORY_CAP = 400;
+export const CHAT_CAP = 100;
 
 export function dayKey(date = new Date()) {
   const y = date.getFullYear();
@@ -37,6 +38,7 @@ export function defaultState() {
     history: [],      // { day, kind, topicId, total, correct, minutes }
     attempts: [],     // { d, t, tier, ok }
     qaLog: [],        // { day, topicId, q, a, source }
+    chats: [],        // buddy conversations { day, view, topicId, assisted, messages:[{role,content}] }
     watched: {},      // episodeId -> { completedAt, lastStep } (Watch episodes)
     lastExport: null,
     activeSession: null, // serialized daily lesson so a closed tab resumes
@@ -57,10 +59,18 @@ export function load() {
   }
 }
 
-export function save(state) {
+// Trim the ring-buffered fields so one summer's state stays small. Extracted
+// so it is unit-testable without touching localStorage.
+export function capState(state) {
   if (state.attempts.length > ATTEMPT_CAP) state.attempts = state.attempts.slice(-ATTEMPT_CAP);
   if (state.qaLog.length > QA_CAP) state.qaLog = state.qaLog.slice(-QA_CAP);
   if (state.history.length > HISTORY_CAP) state.history = state.history.slice(-HISTORY_CAP);
+  if (state.chats.length > CHAT_CAP) state.chats = state.chats.slice(-CHAT_CAP);
+  return state;
+}
+
+export function save(state) {
+  capState(state);
   try {
     localStorage.setItem(KEY, JSON.stringify(state));
   } catch (e) {

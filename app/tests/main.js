@@ -31,6 +31,7 @@ async function run() {
       mapScene: await import('../js/ui/map-scene.js'),
       focus: await import('../js/ui/focus.js'),
       tutor: await import('../js/qa/tutor.js'),
+      chat: await import('../js/ui/chat.js'),
     };
   } catch (e) {
     results.push({ name: 'MODULE IMPORTS', ok: false, err: String(e) });
@@ -48,7 +49,7 @@ async function run() {
     results.push({ name: 'EPISODE/SW FETCH', ok: false, err: String(e) });
   }
   const { makeRng, seedFromString, ri, shuffle } = mods.rng;
-  const { dayKey, addDays, daysBetween, defaultState, exportJSON, parseImport } = mods.storage;
+  const { dayKey, addDays, daysBetween, defaultState, exportJSON, parseImport, capState, CHAT_CAP } = mods.storage;
   const { newMastery, updateMastery, bandOf, scheduleAfterSession, diagnosticScore } = mods.mastery;
   const { planSession, nextNewTopic, dueReviewTopics, NEW_TOPIC_TIERS } = mods.scheduler;
   const { checkAnswer, parseNumber, answerText, gcd } = mods.check;
@@ -417,6 +418,115 @@ async function run() {
     for (const p of ["'./js/ui/session.js'", "'./js/ui/map.js'", "'./js/ui/core.js'", "'./css/app.css'"]) {
       ok(swText.includes(p), 'sw.js ASSETS unexpectedly dropped ' + p);
     }
+  });
+
+  // ---------------- AI buddy: mild dampening + prompt + chats state
+  const { buddySystemPrompt, buildRequestBody } = mods.tutor;
+
+  test('mastery: assisted help halves the correct move, never exceeds normal', () => {
+    eq(updateMastery(newMastery(60), 2, true).score, 67);              // normal: 60 + 0.17·40
+    eq(updateMastery(newMastery(60), 2, true, { assisted: true }).score, 63); // assisted: 60 + 0.085·40
+    ok(63 > 60, 'assisted never punishes');
+    ok(63 < 67, 'assisted never lifts as much as independent');
+  });
+
+  test('mastery: assisted flag is a no-op on a wrong answer', () => {
+    eq(updateMastery(newMastery(60), 2, false).score,
+       updateMastery(newMastery(60), 2, false, { assisted: true }).score);
+  });
+
+  test('mastery: EWMA stays in [5,100] under assisted correct', () => {
+    const m = newMastery(50);
+    let prev = m.score;
+    for (let i = 0; i < 60; i++) { updateMastery(m, 1, true, { assisted: true }); ok(m.score >= prev, 'non-decreasing'); prev = m.score; }
+    ok(m.score <= 100, 'ceiling holds');
+  });
+
+  test('progress: recordAttempt threads assisted into mastery and counters', () => {
+    const st = defaultState();
+    recordAttempt(st, topicOrder[0], 2, true, '2026-07-20', { assisted: true });
+    const m = st.mastery[topicOrder[0]];
+    eq(m.attempts, 1);
+    eq(m.correct, 0, 'assisted-correct does not count as an independent success');
+    ok(m.score < updateMastery(newMastery(50), 2, true).score, 'score bumped less than a normal correct');
+    eq(st.attempts[0].a, 1, 'ring buffer marks assistance');
+  });
+
+  test('progress: recordAttempt without opts is unchanged', () => {
+    const st = defaultState();
+    recordAttempt(st, topicOrder[0], 2, true, '2026-07-20');
+    eq(st.mastery[topicOrder[0]].correct, 1);
+    eq(st.mastery[topicOrder[0]].score, updateMastery(newMastery(50), 2, true).score);
+    ok(!('a' in st.attempts[0]), 'no assist marker on a normal attempt');
+  });
+
+  test('buddy dampening: assisted correct keeps a topic in a lower review band', () => {
+    const D = '2026-07-20';
+    const mn = newMastery(84); updateMastery(mn, 3, true);                    // 84 + 0.14·16 = 86 → secure
+    scheduleAfterSession(mn, D);
+    eq(mn.due, '2026-07-27', 'normal correct crosses into secure → 7-day gap');
+    const ma = newMastery(84); updateMastery(ma, 3, true, { assisted: true }); // 84 + 0.07·16 = 85 → developing
+    scheduleAfterSession(ma, D);
+    eq(ma.due, '2026-07-23', 'assisted stays developing → 3-day gap');
+    ok(ma.score <= mn.score, 'assisted score not higher');
+  });
+
+  test('buddy: buddySystemPrompt is kid-safe, injects context, hides the answer', () => {
+    const p = buddySystemPrompt({ topicName: 'Short division', stem: '842 ÷ 2 = ?' });
+    ok(/under 90 words/i.test(p), 'length rule present');
+    ok(p.includes('Short division'), 'topic injected');
+    ok(p.includes('842 ÷ 2'), 'question stem injected');
+    ok(/guide|do not just|do not simply|think it through/i.test(p), 'told to guide, not solve');
+    const bare = buddySystemPrompt({});
+    ok(bare.length > 0 && !/undefined/.test(bare), 'no-context prompt is clean');
+  });
+
+  test('buddy: system override wins over the topic prompt', () => {
+    eq(buildRequestBody({ question: 'hi', system: 'SYS', streaming: false }).system, 'SYS');
+    ok(buildRequestBody({ question: 'hi', topic: { title: 'X', explanation: { segments: [] } }, streaming: false })
+      .system.includes('Current topic: X'), 'falls back to the topic tutor prompt');
+  });
+
+  test('storage: chats default empty and are capped', () => {
+    eq(defaultState().chats, []);
+    const st = defaultState();
+    for (let i = 0; i < CHAT_CAP + 30; i++) st.chats.push({ day: 'd', messages: [] });
+    capState(st);
+    eq(st.chats.length, CHAT_CAP);
+  });
+
+  test('storage: backup carries chats and strips the key', () => {
+    const st = defaultState();
+    st.chats.push({ day: '2026-07-25', view: 'question', assisted: true, messages: [{ role: 'kid', content: 'q' }] });
+    st.settings.apiKey = 'sk-secret';
+    const text = exportJSON(st);
+    ok(!text.includes('sk-secret'), 'API key never leaves in a backup');
+    const round = parseImport(text);
+    eq(round.chats.length, 1);
+    eq(round.chats[0].assisted, true);
+    const legacy = JSON.parse(JSON.stringify(defaultState())); delete legacy.chats;
+    eq(Object.assign(defaultState(), legacy).chats, [], 'legacy state gains chats via shallow merge');
+  });
+
+  test('buddy: sw v9 precaches the chat + buddy modules', () => {
+    ok(swText, 'sw.js did not load');
+    ok(swText.includes("'./js/ui/chat.js'"), 'sw.js ASSETS missing chat.js');
+    ok(swText.includes("'./js/ui/buddy.js'"), 'sw.js ASSETS missing buddy.js');
+    ok(!swText.includes("'pmtrainer-v8'"), 'CACHE_VERSION was not bumped for the buddy release');
+    for (const p of ["'./js/ui/session.js'", "'./js/qa/tutor.js'", "'./css/app.css'"]) {
+      ok(swText.includes(p), 'sw.js ASSETS unexpectedly dropped ' + p);
+    }
+  });
+
+  test('chat: createChat wires both qaBox paths', () => {
+    const { createChat } = mods.chat;
+    const noInput = createChat({ ask: null });
+    ok(noInput.thread.classList.contains('qa-thread'), 'thread rendered');
+    eq(noInput.inputRow, null, 'no input row without a transport');
+    noInput.addBubble('kid', 'hi');
+    ok(noInput.thread.querySelector('.bubble.kid'), 'addBubble appends a kid bubble');
+    const withInput = createChat({ ask: () => Promise.resolve('x') });
+    ok(withInput.inputRow && withInput.inputRow.querySelector('input.qa-input'), 'input row present with a transport');
   });
 
   // ---------------- streaming tutor (SSE parser)

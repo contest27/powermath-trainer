@@ -1,15 +1,20 @@
-import { mount, go, store } from './ui/core.js';
+import { mount, go, store, onAfterRender } from './ui/core.js';
 import './ui/today.js';
 import './ui/map.js';
 import './ui/session.js';
 import './ui/parent.js';
 import './ui/watch.js';
+import { mountBuddy, updateBuddy } from './ui/buddy.js';
 
 mount(document.getElementById('root'));
 
 // Focused map practice is a same-run bonus: never resume it across reloads,
 // so it can never shadow a resumable daily lesson on the next launch.
 if (store.state.focusSession) { store.state.focusSession = null; store.save(); }
+
+// Global buddy FAB: mounted once outside #root, refreshed on every navigation.
+mountBuddy();
+onAfterRender(updateBuddy);
 
 go('today');
 

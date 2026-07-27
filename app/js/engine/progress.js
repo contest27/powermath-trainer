@@ -1,10 +1,10 @@
 import { newMastery, updateMastery, scheduleAfterSession, diagnosticScore } from './mastery.js';
 import { daysBetween } from './storage.js';
 
-export function recordAttempt(state, topicId, tier, ok, today) {
+export function recordAttempt(state, topicId, tier, ok, today, opts = {}) {
   if (!state.mastery[topicId]) state.mastery[topicId] = newMastery();
-  updateMastery(state.mastery[topicId], tier, ok);
-  state.attempts.push({ d: today, t: topicId, tier, ok: ok ? 1 : 0 });
+  updateMastery(state.mastery[topicId], tier, ok, opts);
+  state.attempts.push({ d: today, t: topicId, tier, ok: ok ? 1 : 0, ...(opts.assisted ? { a: 1 } : {}) });
 }
 
 // Called when the practice block for a new topic ends.

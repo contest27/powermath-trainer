@@ -1,7 +1,7 @@
 // Precaching service worker. Bump CACHE_VERSION on every deploy so clients
 // pick up new content; old caches are cleared on activate.
 
-const CACHE_VERSION = 'pmtrainer-v8';
+const CACHE_VERSION = 'pmtrainer-v9';
 
 // Watch-episode MP3s live in their own long-lived cache that SURVIVES
 // CACHE_VERSION bumps (they are content-addressed by episode folder and never
@@ -34,6 +34,8 @@ const ASSETS = [
   './js/ui/session.js',
   './js/ui/parent.js',
   './js/ui/watch.js',
+  './js/ui/chat.js',
+  './js/ui/buddy.js',
   './js/ui/watch-scenes.js',
   './js/ui/watch-audio.js',
   './js/engine/watch.js',
