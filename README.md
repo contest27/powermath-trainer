@@ -28,6 +28,12 @@ no backend. Deployable to GitHub Pages as-is.
 - **Question types**: number pad, multiple choice, true/false, fraction entry,
   tap-to-order — all touch-first. One retry with a hint, then a friendly
   explanation.
+- **"Was heißt das?"**: with an API key, every question carries a button that
+  explains its *English wording* in German — the words, never the maths. It is
+  told in several ways not to solve, calculate or hint, so the child still has
+  to think. Using it costs **no** mastery credit: the app measures maths, not
+  English. Available in the warm-up check too, so a shaky start is not caused
+  by vocabulary.
 - **Watch episodes**: narrated, animated in-app explainers (video-like: scenes
   auto-advance with the narration, pausable and steppable). One per unit is
   the goal; unit 8 (equivalent fractions) ships first. Reachable from the

@@ -297,6 +297,9 @@ h1, h2, h3 { margin: 0 0 8px; }
 .de-bubble { margin-top: 8px; }
 .de-note { margin: 0 0 4px; font-weight: 700; font-size: 0.85rem; color: var(--muted); }
 
+.wordhelp-row { margin: 2px 0 4px; }
+.word-help { font-size: 0.85rem; }
+
 /* ---- buddy FAB + sheet ---- */
 .buddy-fab {
   position: fixed; right: 16px; z-index: 55;

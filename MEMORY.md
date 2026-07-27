@@ -89,6 +89,22 @@ Project-scope memory. Cross-project lessons go to `~/.claude/MEMORY.md`.
   the parent sees what he stumbled over. Review/repeat sessions are untouched
   (no explanation phase). SW v10.
 
+- **2026-07-25 — Language help on questions ("Was heißt das?").** A second,
+  deliberately different help path: `wordHelpSystemPrompt()` explains the
+  English *wording* of a practice question in German and is forbidden — several
+  ways over — to solve, calculate, reveal the first step or hint. It does **not**
+  set `item.assisted`, so it gives **full** mastery credit (Sebastian's call: the
+  app measures maths, not English; dampening it would make the child avoid the
+  button and guess instead). The buddy's "help me with this" stays the only
+  dampening path. Shown on every question **including the diagnostic** — language
+  confusion there would corrupt the seeded priors for the whole summer, so
+  helping actually protects the measurement (this does not weaken the earlier
+  structural guard, which only bars *maths* help from the warm-up). Questions are
+  generated, so there is no offline rephrasing: without a key the button is not
+  rendered at all rather than promising help. Logged as `source:'wordhelp'` (🔤)
+  distinct from `'translate'` (🇩🇪) so the parent can tell "didn't understand the
+  lesson" from "couldn't read the question". SW v11.
+
 ## Learnings
 
 - [LEARN:web] The embedded browser pane serves **stale ES modules from the HTTP

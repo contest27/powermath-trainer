@@ -506,13 +506,46 @@ async function run() {
     ok(text.includes('gleichwertig'), 'translations ride along in the backup');
   });
 
-  test('lesson: sw v10 precaches the lesson module', () => {
+  test('lesson: sw precaches the lesson module and the version keeps moving', () => {
     ok(swText, 'sw.js did not load');
     ok(swText.includes("'./js/ui/lesson.js'"), 'sw.js ASSETS missing lesson.js');
-    ok(!swText.includes("'pmtrainer-v9'"), 'CACHE_VERSION was not bumped for the guided explanation');
+    ok(swText.includes("'pmtrainer-v11'"), 'CACHE_VERSION was not bumped for the word help');
+    ok(!swText.includes("'pmtrainer-v10'"), 'old CACHE_VERSION still present');
     for (const p of ["'./js/ui/session.js'", "'./js/tts.js'", "'./js/ui/chat.js'"]) {
       ok(swText.includes(p), 'sw.js ASSETS unexpectedly dropped ' + p);
     }
+  });
+
+  test('word help: the prompt asks for German and forbids solving the question', () => {
+    const p = mods.tutor.wordHelpSystemPrompt();
+    ok(/German/i.test(p), 'asks for German');
+    ok(/wording/i.test(p), 'scoped to the wording, not the maths');
+    ok(/NEVER solve/i.test(p), 'explicit ban on solving');
+    ok(/do not calculate/i.test(p) && /do not state the answer/i.test(p), 'ban restated');
+    ok(/first step/i.test(p) && /hint/i.test(p), 'no step-by-step and no hints either');
+    ok(/Keep every number exactly/i.test(p), 'numbers stay put');
+    ok(/brackets/i.test(p), 'English maths term kept alongside');
+    ok(!/undefined/.test(p));
+  });
+
+  test('word help: it is a different prompt from the lesson translation', () => {
+    const word = mods.tutor.wordHelpSystemPrompt();
+    const lesson = mods.tutor.translateSystemPrompt();
+    ok(word !== lesson, 'two distinct jobs, two distinct prompts');
+    ok(/NEVER solve/i.test(word) && !/NEVER solve/i.test(lesson), 'only the question prompt bans solving');
+    eq(mods.tutor.buildRequestBody({ question: 'x', system: word, streaming: true }).system, word);
+  });
+
+  test('word help: the parent corner maps every log source to its own icon', () => {
+    const icon = (source) => ({ ai: '🤖', translate: '🇩🇪', wordhelp: '🔤' })[source] ?? '💬';
+    eq(icon('wordhelp'), '🔤', 'question wording help');
+    eq(icon('translate'), '🇩🇪', 'lesson translation');
+    eq(icon('ai'), '🤖');
+    eq(icon('faq'), '💬', 'unknown sources still render');
+    const st = defaultState();
+    st.qaLog.push({ day: '2026-07-25', topicId: null, q: 'Fill in the missing number', a: 'Trage die fehlende Zahl ein.', source: 'wordhelp' });
+    eq(st.qaLog.at(-1).source, 'wordhelp');
+    ok(exportJSON(st).includes('fehlende Zahl'), 'rides along in the backup');
   });
 
   test('lesson: germanVoice returns a German voice or null, never throws', () => {

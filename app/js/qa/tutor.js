@@ -52,6 +52,23 @@ export function translateSystemPrompt() {
   ].join('\n');
 }
 
+// System prompt for language help ON A PRACTICE QUESTION. Deliberately separate
+// from translateSystemPrompt: here the job is to explain the English WORDING so
+// the child can attempt the maths himself. Solving it would defeat the purpose
+// and quietly corrupt his mastery score, so the ban is stated several ways.
+export function wordHelpSystemPrompt() {
+  return [
+    'A 10-year-old in a UK Year 5 maths app is stuck on the ENGLISH WORDING of a practice question. German is his home language.',
+    'Say in simple German what the question is asking him to do.',
+    'Rules:',
+    '- Translate and explain the wording only. Keep every number exactly as it is.',
+    '- Keep the English maths term in brackets after the German one, for example "Zähler (numerator)", "Rest (remainder)".',
+    '- NEVER solve the question. Do not calculate anything, do not state the answer, do not reveal the first step, and do not give a hint about how to work it out.',
+    '- If he would still have to think to answer it, you did it right.',
+    '- Under 60 words. Plain sentences only: no markdown, no headings, no lists.',
+  ].join('\n');
+}
+
 // The Messages API request body. Pure + exported so the system override and the
 // haiku/max_tokens defaults are unit-testable without a fetch.
 export function buildRequestBody({ question, topic, system = null, streaming }) {

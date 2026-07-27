@@ -1,6 +1,6 @@
 # PowerMath Trainer — Project Map
 
-**Status:** alle sechs Features LIVE (sw v10) — Watch, Schatzkarte, Karten-Übung, Streaming-Tutor, KI-Buddy, Geführte Erklärung · offen: iPad-Abnahme
+**Status:** sechs Features LIVE (sw v10) · Sprachhilfe an den Aufgaben gebaut & verifiziert (sw v11), wartet auf Commit-Go · offen: iPad-Abnahme
 **Last updated:** 2026-07-25
 
 ## Recent (updated 2026-07-25)
@@ -12,7 +12,8 @@ englische Fassung*). Gebaut, verifiziert: **124 Tests grün**, Tor hält im echt
 Deutsch-Streaming gegen gemockten SSE-Stream, Fortsetzen mitten in der Lektion, Wiederholungen
 unangetastet. **Committet `a1a28f9`, deployt (sw v10), live verifiziert.**
 
-1. [[quality_reports/session_logs/2026-07-25_guided-explanation|📄 Session-Log Geführte Erklärung]] — Verlauf + volle Verifikation. **Start here.**
+0. [[quality_reports/session_logs/2026-07-25_word-help|📄 Session-Log Sprachhilfe an den Aufgaben]] — „🇩🇪 Was heißt das?", volle Gutschrift (Gegenprobe +5/+5), auch im Check-up. **Neuestes, wartet auf Commit.**
+1. [[quality_reports/session_logs/2026-07-25_guided-explanation|Session-Log Geführte Erklärung]] — Verlauf + volle Verifikation.
 2. [[quality_reports/plans/2026-07-25_guided-explanation|Approved plan]] — Schrittmodell, Tor, Übersetzung, TTS-Fund.
 3. [[quality_reports/session_logs/2026-07-25_ai-buddy|KI-Buddy]] (deployt, `a8cf2d7`) · [[quality_reports/session_logs/2026-07-24_streaming-tutor|Streaming-Tutor]] · [[quality_reports/session_logs/2026-07-24_map-practice|Karten-Übung]] · [[quality_reports/session_logs/2026-07-24_treasure-map|Schatzkarte]].
 4. [[MEMORY|Project memory]] — alle Entscheidungen + iOS-Zweistart-Lesson.

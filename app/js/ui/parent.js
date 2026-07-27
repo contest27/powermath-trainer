@@ -6,6 +6,10 @@ import { bandOf } from '../engine/mastery.js';
 import { testKey } from '../qa/tutor.js';
 import * as tts from '../tts.js';
 
+// What kind of help each logged entry was: AI answer, lesson translated to
+// German, or the English wording of a question explained.
+const QA_ICON = { ai: '🤖', translate: '🇩🇪', wordhelp: '🔤' };
+
 // ------------------------------------------------------------------ gate
 
 registerScreen('parentgate', () => {
@@ -106,7 +110,7 @@ registerScreen('parent', () => {
     ai.append(h('h3', { class: 'sub' }, 'Recent questions'));
     for (const e of log) {
       ai.append(h('div', { class: 'qlog' },
-        h('div', { class: 'qlog-q' }, `${e.day} · ${e.source === 'ai' ? '🤖' : e.source === 'translate' ? '🇩🇪' : '💬'} ${e.q}`),
+        h('div', { class: 'qlog-q' }, `${e.day} · ${QA_ICON[e.source] ?? '💬'} ${e.q}`),
         h('div', { class: 'qlog-a muted' }, e.a)));
     }
   }

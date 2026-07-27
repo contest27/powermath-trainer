@@ -14,7 +14,7 @@ import { createChat } from './chat.js';
 import {
   lessonSteps, stepIndex, advanceStep, backStep, isLastStep, canPractise, markCheckedIn,
 } from './lesson.js';
-import { askTutor, translateSystemPrompt } from '../qa/tutor.js';
+import { askTutor, translateSystemPrompt, wordHelpSystemPrompt } from '../qa/tutor.js';
 import * as tts from '../tts.js';
 
 // ---------------------------------------------------------------- session build
@@ -314,7 +314,12 @@ function qaBox(topic) {
 }
 
 function logQa(topic, q, a, source) {
-  store.state.qaLog.push({ day: dayKey(), topicId: topic.id, q, a, source });
+  logQaEntry(topic?.id ?? null, q, a, source);
+}
+
+// Diagnostic items belong to no topic, so the id is passed straight through.
+function logQaEntry(topicId, q, a, source) {
+  store.state.qaLog.push({ day: dayKey(), topicId, q, a, source });
   store.save();
 }
 
@@ -342,6 +347,7 @@ function itemView(s) {
     h('div', { class: 'prompt', html: q.prompt }), speakerButton(q.prompt, { small: true }));
   card.append(promptRow);
   if (q.svg) card.append(h('div', { class: 'vis', html: q.svg }));
+  card.append(wordHelpRow(q, item));
 
   const state = { tries: 0, resolved: false };
   const feedback = h('div', { class: 'feedback' });
@@ -390,6 +396,55 @@ function itemView(s) {
   card.append(inputHost);
   wrap.append(card);
   return wrap;
+}
+
+// "What does this say?" — help with the ENGLISH of a question, not the maths.
+// Deliberately does NOT set item.assisted: the app measures maths, not English,
+// so a child who only needed the words still earns full credit. (The buddy's
+// "help me with this" is the one that halves it.)
+// Questions are generated, so there is no offline rephrasing to fall back on —
+// without a key the button simply is not offered rather than promising help.
+function wordHelpRow(q, item) {
+  if (!store.state.settings.apiKey) return null;
+  const out = h('div', { class: 'de-out' });
+  const btn = h('button', { class: 'seg-alt seg-de word-help' }, '🇩🇪 Was heißt das?');
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    const stem = stripForSpeech(q.prompt);
+    const textEl = h('div', { class: 'tutor-stream thinking' }, 'Einen Moment…');
+    const bubble = h('div', { class: 'bubble tutor de-bubble' }, textEl);
+    out.replaceChildren(bubble);
+    let streamed = '';
+    try {
+      const answer = await askTutor({
+        question: stem, apiKey: store.state.settings.apiKey,
+        system: wordHelpSystemPrompt(),
+        onText: (piece) => {
+          if (!streamed) textEl.classList.remove('thinking');
+          streamed += piece;
+          textEl.textContent = streamed;
+        },
+      });
+      textEl.classList.remove('thinking');
+      textEl.textContent = answer;
+      if (tts.germanVoice()) {
+        bubble.append(h('button', {
+          class: 'seg-play', 'aria-label': 'Auf Deutsch vorlesen',
+          onclick: () => tts.speak(answer, { rate: store.state.settings.rate, lang: 'de' }),
+        }, '🔊'));
+      }
+      logQaEntry(item.topicId ?? null, stem.slice(0, 140), answer, 'wordhelp');
+    } catch (e) {
+      if (!streamed.trim()) {
+        out.replaceChildren(h('div', { class: 'bubble tutor de-bubble' },
+          h('p', {}, 'Dafür brauche ich das Internet. Frag Mama oder Papa!')));
+      } else {
+        textEl.classList.remove('thinking');
+      }
+    }
+    btn.disabled = false;
+  });
+  return h('div', { class: 'wordhelp-row' }, h('div', { class: 'seg-altrow' }, btn), out);
 }
 
 function inputControl(q, submit) {
