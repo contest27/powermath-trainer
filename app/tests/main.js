@@ -32,6 +32,8 @@ async function run() {
       focus: await import('../js/ui/focus.js'),
       tutor: await import('../js/qa/tutor.js'),
       chat: await import('../js/ui/chat.js'),
+      lesson: await import('../js/ui/lesson.js'),
+      tts: await import('../js/tts.js'),
     };
   } catch (e) {
     results.push({ name: 'MODULE IMPORTS', ok: false, err: String(e) });
@@ -418,6 +420,104 @@ async function run() {
     for (const p of ["'./js/ui/session.js'", "'./js/ui/map.js'", "'./js/ui/core.js'", "'./css/app.css'"]) {
       ok(swText.includes(p), 'sw.js ASSETS unexpectedly dropped ' + p);
     }
+  });
+
+  // ---------------- guided explanation (step model + gate)
+  const {
+    lessonSteps, stepCount, stepIndex, currentStep, advanceStep, backStep,
+    isLastStep, canPractise, markCheckedIn,
+  } = mods.lesson;
+
+  test('lesson: three steps — explanation in halves, then the check-in', () => {
+    const t = topicById('u08-equivalent');
+    const steps = lessonSteps(t);
+    eq(steps.length, 3, 'two explanation parts + check-in');
+    eq(steps[0].kind, 'part');
+    eq(steps[2], { kind: 'checkin' });
+    // every segment appears exactly once, in order, split across the two parts
+    eq([...steps[0].segs, ...steps[1].segs], t.explanation.segments.map((_, i) => i));
+    eq(steps[0].example, false, 'the worked example rides with the second half');
+    eq(steps[1].example, true);
+    for (const topic of topics) eq(stepCount(topic), 3, topic.id + ': unexpected step count');
+  });
+
+  test('lesson: advance clamps at the last step, back clamps at zero', () => {
+    const t = topicById('u08-equivalent');
+    const s = { segIdx: 0 };
+    for (let i = 0; i < stepCount(t) + 5; i++) advanceStep(s, t);
+    eq(s.segIdx, stepCount(t) - 1, 'never past the last step');
+    ok(isLastStep(s, t));
+    for (let i = 0; i < stepCount(t) + 5; i++) backStep(s, t);
+    eq(s.segIdx, 0, 'never below zero');
+    eq(currentStep(s, t).kind, 'part');
+  });
+
+  test('lesson: the gate blocks practice until the check-in is answered', () => {
+    const t = topicById('u08-equivalent');
+    const s = { segIdx: 0 };
+    ok(!canPractise(s), 'fresh lesson is gated');
+    while (!isLastStep(s, t)) advanceStep(s, t);
+    ok(!canPractise(s), 'reaching the check-in is not enough on its own');
+    markCheckedIn(s);
+    ok(canPractise(s), 'answering unlocks practice');
+  });
+
+  test('lesson: asking for a translation also unlocks (never a dead end)', () => {
+    // Both check-in buttons run markCheckedIn — the translate path must not trap the child.
+    const s = { segIdx: 3 };
+    markCheckedIn(s);
+    ok(canPractise(s));
+  });
+
+  test('lesson: a resumed session keeps its place and survives stray values', () => {
+    const t = topicById('u08-equivalent');
+    eq(stepIndex({ segIdx: 2 }, t), 2, 'resumes mid-explanation');
+    eq(stepIndex({ segIdx: 999 }, t), stepCount(t) - 1, 'clamps a too-large stored index');
+    eq(stepIndex({ segIdx: -4 }, t), 0, 'clamps a negative stored index');
+    eq(stepIndex({}, t), 0, 'a session from before this feature starts at the beginning');
+  });
+
+  test('lesson: old sessions already past the explanation are unaffected', () => {
+    // phase 'items' never renders the explanation, so a missing checkedIn cannot deadlock.
+    const legacy = { phase: 'items', segIdx: 0 };
+    ok(!canPractise(legacy), 'gate is closed…');
+    eq(legacy.phase, 'items', '…but the session is already past it and keeps running');
+  });
+
+  test('lesson: translate prompt asks for German and keeps the English terms', () => {
+    const p = mods.tutor.translateSystemPrompt();
+    ok(/German/i.test(p), 'asks for German');
+    ok(/numerator|bar model|exchange/.test(p), 'shows the keep-the-English-term pattern');
+    ok(/brackets/i.test(p), 'English term in brackets');
+    ok(/never give away the answer/i.test(p), 'must not pre-empt a practice answer');
+    ok(!/undefined/.test(p));
+    eq(mods.tutor.buildRequestBody({ question: 'x', system: p, streaming: false }).system, p, 'override wins');
+  });
+
+  test('lesson: a translation is logged so the parent sees what he struggled with', () => {
+    const st = defaultState();
+    st.qaLog.push({ day: '2026-07-25', topicId: 'u08-equivalent', q: 'Two fractions are equivalent…', a: 'Zwei Brüche sind gleichwertig (equivalent)…', source: 'translate' });
+    const e = st.qaLog.at(-1);
+    eq(e.source, 'translate');
+    // parent.js picks the emoji off `source`; unknown sources fall back to 💬.
+    const emoji = e.source === 'ai' ? '🤖' : e.source === 'translate' ? '🇩🇪' : '💬';
+    eq(emoji, '🇩🇪');
+    const text = exportJSON(st);
+    ok(text.includes('gleichwertig'), 'translations ride along in the backup');
+  });
+
+  test('lesson: sw v10 precaches the lesson module', () => {
+    ok(swText, 'sw.js did not load');
+    ok(swText.includes("'./js/ui/lesson.js'"), 'sw.js ASSETS missing lesson.js');
+    ok(!swText.includes("'pmtrainer-v9'"), 'CACHE_VERSION was not bumped for the guided explanation');
+    for (const p of ["'./js/ui/session.js'", "'./js/tts.js'", "'./js/ui/chat.js'"]) {
+      ok(swText.includes(p), 'sw.js ASSETS unexpectedly dropped ' + p);
+    }
+  });
+
+  test('lesson: germanVoice returns a German voice or null, never throws', () => {
+    const v = mods.tts.germanVoice();
+    ok(v === null || (v.lang && v.lang.toLowerCase().startsWith('de')), 'null or a de-* voice');
   });
 
   // ---------------- AI buddy: mild dampening + prompt + chats state

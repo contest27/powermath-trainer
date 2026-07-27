@@ -106,7 +106,7 @@ registerScreen('parent', () => {
     ai.append(h('h3', { class: 'sub' }, 'Recent questions'));
     for (const e of log) {
       ai.append(h('div', { class: 'qlog' },
-        h('div', { class: 'qlog-q' }, `${e.day} · ${e.source === 'ai' ? '🤖' : '💬'} ${e.q}`),
+        h('div', { class: 'qlog-q' }, `${e.day} · ${e.source === 'ai' ? '🤖' : e.source === 'translate' ? '🇩🇪' : '💬'} ${e.q}`),
         h('div', { class: 'qlog-a muted' }, e.a)));
     }
   }

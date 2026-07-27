@@ -72,6 +72,23 @@ Project-scope memory. Cross-project lessons go to `~/.claude/MEMORY.md`.
   cumulative / band-crossing, not guaranteed per answer — that is what MILD
   means. Model stays haiku. SW v9.
 
+- **2026-07-25 — Guided explanation + German on demand.** The child's English is
+  still weak, so a new topic is now stepped through part by part (`ui/lesson.js`,
+  pure: `lessonSteps` = segments + example + check-in, `canPractise`), and
+  practice is gated behind a check-in ("understood, or shall I translate?").
+  BOTH check-in answers unlock — asking for German must never trap him. The step
+  position revives `segIdx`, a field both session builders wrote and nothing read,
+  so it persists with the session and resumes mid-lesson. Translation =
+  `translateSystemPrompt()` through the existing `askTutor` system override
+  (German, English maths term in brackets, never gives away an answer); the
+  offline/no-key fallback is the `alt` rephrasing that already exists for every
+  segment — never a dead end. `tts.speak` gained a `lang` option +
+  `germanVoice()`, because `chooseVoice` always fell back to English and German
+  read by an English voice is unusable; the play button appears only when a
+  German voice exists. Translations log to `qaLog` with `source:'translate'` so
+  the parent sees what he stumbled over. Review/repeat sessions are untouched
+  (no explanation phase). SW v10.
+
 ## Learnings
 
 - [LEARN:web] The embedded browser pane serves **stale ES modules from the HTTP

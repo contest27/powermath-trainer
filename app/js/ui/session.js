@@ -11,7 +11,10 @@ import { makeRng, seedFromString, pick } from '../engine/rng.js';
 import { topicOrder, topicById, diagnosticItems } from '../content/index.js';
 import { buildFocusSession, applySessionEnd } from './focus.js';
 import { createChat } from './chat.js';
-import { askTutor } from '../qa/tutor.js';
+import {
+  lessonSteps, stepIndex, advanceStep, backStep, isLastStep, canPractise, markCheckedIn,
+} from './lesson.js';
+import { askTutor, translateSystemPrompt } from '../qa/tutor.js';
 import * as tts from '../tts.js';
 
 // ---------------------------------------------------------------- session build
@@ -104,45 +107,64 @@ registerScreen('session', () => {
 
 // ------------------------------------------------------------- explanation view
 
+// The lesson is walked one part at a time and practice stays locked until the
+// check-in at the end is answered — a new topic can no longer be skipped with a
+// single tap. The step position lives on the session (`segIdx`), so closing the
+// tab mid-lesson resumes in the right place.
 function explainView(s) {
   const topic = topicById(s.newTopic);
+  const steps = lessonSteps(topic);
+  const idx = stepIndex(s, topic);
+  const step = steps[idx];
   const wrap = h('div', { class: 'screen' });
   wrap.append(headerBar('New topic', { onBack: () => exitSession(s) }));
 
   const card = h('div', { class: 'card lesson' });
   card.append(h('h1', { class: 'lesson-title' }, topic.title));
-  card.append(h('p', { class: 'lesson-sub' }, 'Listen to each part. Tap 🔊 again any time you want to hear it again.'));
+  card.append(stepProgress(idx, steps.length));
 
-  topic.explanation.segments.forEach((seg, i) => {
-    card.append(segmentEl(seg, i));
-  });
-
-  if (topic.example) {
-    const ex = h('div', { class: 'example' }, h('h3', {}, 'Worked example'));
-    if (topic.example.svg) ex.append(h('div', { class: 'vis', html: topic.example.svg }));
-    topic.example.steps.forEach((st, i) => ex.append(h('p', { class: 'ex-step' },
-      h('span', { class: 'ex-n' }, String(i + 1)), h('span', { html: st }), speakerButton(st, { small: true }))));
-    card.append(ex);
+  if (step.kind === 'part') {
+    for (const i of step.segs) card.append(segmentEl(topic.explanation.segments[i], topic));
+    if (step.example) card.append(exampleEl(topic));
+  } else {
+    card.append(checkInEl(s, topic));
+    card.append(qaBox(topic)); // the offline FAQ chips belong to the "any questions?" moment
   }
-
-  card.append(qaBox(topic));
   wrap.append(card);
-  wrap.append(h('div', { class: 'stickybar' },
-    h('button', {
-      class: 'btn primary wide big',
+
+  const goStep = (move) => { tts.stop(); move(); persist(); go('session'); };
+  const backBtn = h('button', {
+    class: 'btn subtle', disabled: idx === 0, onclick: () => goStep(() => backStep(s, topic)),
+  }, '‹ Back');
+
+  let rightBtn = null;
+  if (canPractise(s)) {
+    rightBtn = h('button', {
+      class: 'btn primary big',
       onclick: () => { tts.stop(); s.phase = 'items'; persist(); go('session'); },
-    }, "Let's practise! →")));
+    }, "Let's practise! →");
+  } else if (!isLastStep(s, topic)) {
+    rightBtn = h('button', {
+      class: 'btn primary big', onclick: () => goStep(() => advanceStep(s, topic)),
+    }, 'Next ›');
+  }
+  wrap.append(h('div', { class: 'stickybar steprow' }, backBtn, rightBtn));
   return wrap;
 }
 
-function segmentEl(seg) {
+function stepProgress(idx, total) {
+  const dots = h('div', { class: 'step-dots' });
+  for (let i = 0; i < total; i++) dots.append(h('i', { class: i <= idx ? 'on' : '' }));
+  return h('div', { class: 'step-head' },
+    h('p', { class: 'lesson-sub' }, `Part ${idx + 1} of ${total}`), dots);
+}
+
+function segmentEl(seg, topic) {
   let showingAlt = false;
   const textEl = h('p', { class: 'seg-text', html: seg.text });
   const visEl = seg.svg ? h('div', { class: 'vis', html: seg.svg }) : null;
   const playBtn = h('button', { class: 'seg-play', 'aria-label': 'Play this part' }, '🔊');
-  const altBtn = seg.alt
-    ? h('button', { class: 'seg-alt' }, '✨ Say it differently')
-    : null;
+  const altBtn = seg.alt ? h('button', { class: 'seg-alt' }, '✨ Say it differently') : null;
   const box = h('div', { class: 'segment' },
     h('div', { class: 'seg-row' }, playBtn, textEl),
     visEl,
@@ -162,7 +184,110 @@ function segmentEl(seg) {
     altBtn.textContent = showingAlt ? '↩︎ Back to first version' : '✨ Say it differently';
     read();
   });
+  box.append(translateRow({ source: seg.text, alt: seg.alt, topic }));
   return box;
+}
+
+function exampleEl(topic) {
+  const ex = h('div', { class: 'example' }, h('h3', {}, 'Worked example'));
+  if (topic.example.svg) ex.append(h('div', { class: 'vis', html: topic.example.svg }));
+  topic.example.steps.forEach((st, i) => ex.append(h('p', { class: 'ex-step' },
+    h('span', { class: 'ex-n' }, String(i + 1)), h('span', { html: st }), speakerButton(st, { small: true }))));
+  ex.append(translateRow({ source: topic.example.steps.join(' '), alt: null, topic }));
+  return ex;
+}
+
+// "Did you understand, or shall I translate something?" — the moment the child's
+// weaker English is explicitly checked. BOTH answers unlock practice: asking for
+// a translation must never lock him out.
+function checkInEl(s, topic) {
+  const box = h('div', { class: 'checkin' });
+  const out = h('div', { class: 'de-out' });
+  const unlock = () => { markCheckedIn(s); persist(); };
+  const gotIt = h('button', {
+    class: 'btn primary wide big',
+    onclick: () => { unlock(); go('session'); },
+  }, "👍 I've got it");
+  const wholeLesson = topic.explanation.segments.map((sg) => sg.text).join(' ');
+  // Without a key there is no German — but every segment has a simpler English
+  // rephrasing, so "easier words" is a real answer rather than an apology.
+  const wholeAlt = topic.explanation.segments.map((sg) => sg.alt).filter(Boolean).join(' ');
+  const deBtn = h('button', {
+    class: 'btn subtle wide',
+    onclick: () => {
+      unlock();
+      runTranslation(out, { source: wholeLesson, alt: wholeAlt, topic, whole: true });
+      gotIt.textContent = 'Ready to practise →';
+    },
+  }, store.state.settings.apiKey ? '🇩🇪 Bitte auf Deutsch' : '🔤 Say it in easier words');
+  box.append(
+    h('h3', {}, '🦉 Quick check'),
+    h('p', { class: 'seg-text' }, 'Did you understand that — or shall I explain it in German for you?'),
+    h('div', { class: 'checkin-row' }, gotIt, deBtn),
+    out,
+  );
+  return box;
+}
+
+// German on demand. With a key the tutor translates the part on screen; without
+// one (or offline, or on an error) the simpler English rephrasing stands in, so
+// the child is never left with a dead end.
+function translateRow({ source, alt, topic }) {
+  const hasKey = !!store.state.settings.apiKey;
+  const out = h('div', { class: 'de-out' });
+  const btn = h('button', { class: 'seg-alt seg-de' },
+    hasKey ? '🇩🇪 Auf Deutsch' : '🔤 Say it in easier words');
+  btn.addEventListener('click', () => runTranslation(out, { source, alt, topic, btn }));
+  return h('div', {}, h('div', { class: 'seg-altrow' }, btn), out);
+}
+
+function fallbackText(out, alt, reason) {
+  if (alt) {
+    out.replaceChildren(h('div', { class: 'bubble tutor de-bubble' },
+      h('p', { class: 'de-note' }, 'Here it is in easier words:'), h('div', { html: alt })));
+    return;
+  }
+  out.replaceChildren(h('div', { class: 'bubble tutor de-bubble' },
+    h('p', {}, reason === 'nokey'
+      ? 'German needs the tutor switched on — ask Mum or Dad to add it in the Parent corner.'
+      : 'I could not reach the tutor just now. Ask Mum or Dad to help with this one!')));
+}
+
+async function runTranslation(out, { source, alt, topic, btn = null, whole = false }) {
+  const apiKey = store.state.settings.apiKey;
+  const plain = stripForSpeech(source);
+  if (!apiKey) { fallbackText(out, alt, 'nokey'); return; }
+  if (btn) btn.disabled = true;
+  const textEl = h('div', { class: 'tutor-stream thinking' }, 'Einen Moment…');
+  const bubble = h('div', { class: 'bubble tutor de-bubble' }, textEl);
+  out.replaceChildren(bubble);
+  let streamed = '';
+  try {
+    const answer = await askTutor({
+      question: whole ? `Fasse diese Lektion kurz auf Deutsch zusammen: ${plain}` : plain,
+      apiKey, system: translateSystemPrompt(),
+      onText: (piece) => {
+        if (!streamed) textEl.classList.remove('thinking');
+        streamed += piece;
+        textEl.textContent = streamed;
+      },
+    });
+    textEl.classList.remove('thinking');
+    textEl.textContent = answer;
+    // Only offer playback when the device actually has a German voice —
+    // German read by an English voice is worse than no button at all.
+    if (tts.germanVoice()) {
+      bubble.append(h('button', {
+        class: 'seg-play', 'aria-label': 'Auf Deutsch vorlesen',
+        onclick: () => tts.speak(answer, { rate: store.state.settings.rate, lang: 'de' }),
+      }, '🔊'));
+    }
+    logQa(topic, plain.slice(0, 140), answer, 'translate');
+  } catch (e) {
+    if (streamed.trim()) textEl.classList.remove('thinking'); // keep the partial German
+    else fallbackText(out, alt, 'error');
+  }
+  if (btn) btn.disabled = false;
 }
 
 // --------------------------------------------------------------------- Q&A box

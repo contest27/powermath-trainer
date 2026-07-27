@@ -278,6 +278,25 @@ h1, h2, h3 { margin: 0 0 8px; }
 
 .map-hint { margin-top: 8px; font-size: 0.82rem; }
 
+/* ---- guided explanation (stepper) ---- */
+.step-head { display: flex; align-items: center; gap: 10px; justify-content: space-between; flex-wrap: wrap; }
+.step-head .lesson-sub { margin: 0; }
+.step-dots { display: flex; gap: 5px; }
+.step-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+.step-dots i.on { background: var(--brand); }
+.stickybar.steprow { display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+.stickybar.steprow .btn { flex: 1 1 0; }
+.stickybar.steprow .btn:disabled { opacity: 0.35; }
+.checkin { border: 2px dashed var(--line); border-radius: var(--radius); padding: 14px; margin-top: 6px; }
+.checkin h3 { margin: 0 0 6px; }
+.checkin-row { display: grid; gap: 8px; margin-top: 10px; }
+/* Secondary help buttons are tapped by a 10-year-old — keep them thumb-sized. */
+.seg-alt { min-height: 44px; }
+.seg-de { border-color: var(--brand); font-weight: 700; }
+.de-out:empty { display: none; }
+.de-bubble { margin-top: 8px; }
+.de-note { margin: 0 0 4px; font-weight: 700; font-size: 0.85rem; color: var(--muted); }
+
 /* ---- buddy FAB + sheet ---- */
 .buddy-fab {
   position: fixed; right: 16px; z-index: 55;

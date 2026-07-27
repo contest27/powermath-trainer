@@ -38,6 +38,20 @@ export function buddySystemPrompt(ctx = {}) {
   return bits.join('\n');
 }
 
+// System prompt for translating one piece of the lesson into German. The child
+// is learning maths in English but is not fluent yet, so the English term stays
+// alongside the German one. Pure + exported for tests.
+export function translateSystemPrompt() {
+  return [
+    'You translate one short piece of a UK Year 5 maths lesson into German for a 10-year-old whose English is still weak.',
+    'Rules:',
+    '- Write simple, warm German a 10-year-old understands. Plain sentences only: no markdown, no headings, no lists.',
+    '- Keep the English maths term in brackets after the German one, for example "Zähler (numerator)", "Tauschen (exchange)", "Balkenmodell (bar model)".',
+    '- Translate and explain only what you are given. Do not add new maths, do not invent examples, and never give away the answer to a practice question.',
+    '- Under 80 words.',
+  ].join('\n');
+}
+
 // The Messages API request body. Pure + exported so the system override and the
 // haiku/max_tokens defaults are unit-testable without a fetch.
 export function buildRequestBody({ question, topic, system = null, streaming }) {

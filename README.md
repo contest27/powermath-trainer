@@ -16,9 +16,15 @@ no backend. Deployable to GitHub Pages as-is.
 - **Adaptive review** (Leitner-style): struggling topics return after 1 day,
   developing after 3, secure after 7. Review questions are tiered to the
   child's current level.
-- **Explanation player**: 4–6 short segments per topic, each with tap-to-listen
-  audio (device speech synthesis), a "say it differently" simpler rephrasing,
-  and Power Maths visual models (bar models, place-value grids, number lines).
+- **Guided explanation**: a new topic is walked through one part at a time —
+  each segment (tap-to-listen audio, a "say it differently" simpler rephrasing,
+  Power Maths visual models), then the worked example, then a check-in: *"Did
+  you understand — or shall I explain it in German?"* Practice only unlocks once
+  that is answered, so a lesson can't be skipped with one tap. Every part also
+  has a 🇩🇪 button: with an API key the tutor explains it in German (keeping the
+  English maths terms in brackets, and reading it aloud with a German voice);
+  without one, the simpler English rephrasing stands in. Repeat practice of a
+  finished topic still starts straight away.
 - **Question types**: number pad, multiple choice, true/false, fraction entry,
   tap-to-order — all touch-first. One retry with a hint, then a friendly
   explanation.
