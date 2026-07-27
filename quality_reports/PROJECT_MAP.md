@@ -1,6 +1,6 @@
 # PowerMath Trainer — Project Map
 
-**Status:** v1 + Watch + Schatzkarte + Karten-Übung + Streaming-Tutor + KI-Buddy LIVE (sw v9) · Geführte Erklärung gebaut & verifiziert (sw v10), wartet auf Commit-Go
+**Status:** alle sechs Features LIVE (sw v10) — Watch, Schatzkarte, Karten-Übung, Streaming-Tutor, KI-Buddy, Geführte Erklärung · offen: iPad-Abnahme
 **Last updated:** 2026-07-25
 
 ## Recent (updated 2026-07-25)
@@ -10,7 +10,7 @@ für Schritt durchgegangen; Übung schaltet erst nach der Rückfrage „verstand
 ich es dir auf Deutsch erklären?" frei; 🇩🇪-Knopf an jedem Schritt, ohne Key die einfachere
 englische Fassung*). Gebaut, verifiziert: **124 Tests grün**, Tor hält im echten Durchlauf,
 Deutsch-Streaming gegen gemockten SSE-Stream, Fortsetzen mitten in der Lektion, Wiederholungen
-unangetastet. Offen: Commit-Go (sw v10).
+unangetastet. **Committet `a1a28f9`, deployt (sw v10), live verifiziert.**
 
 1. [[quality_reports/session_logs/2026-07-25_guided-explanation|📄 Session-Log Geführte Erklärung]] — Verlauf + volle Verifikation. **Start here.**
 2. [[quality_reports/plans/2026-07-25_guided-explanation|Approved plan]] — Schrittmodell, Tor, Übersetzung, TTS-Fund.

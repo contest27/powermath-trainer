@@ -87,8 +87,12 @@ per Python (CSS wird eingebettet, Marker-Substitution mit Leftover-Assertion).
 Lokaler Dev-Stand ist als Demo-Profil geparkt: Check-up erledigt, Thema 8, Start
 direkt in der Lektion, **kein Test-Key** hinterlegt.
 
-## Offen
+## Abschluss
 
-- Commit erst auf explizites Go; danach Deploy (sw v10).
+Committet als `a1a28f9`, gepusht, Pages-Deploy erfolgreich. Live geprüft:
+sw v10 aktiv, `lesson.js` präcacht, Drei-Schritt-Modell im ausgelieferten Code,
+alle 42 Precache-Dateien liefern 200.
+
+## Offen
 - Auf dem iPad zu beurteilen: ob drei Schritte jetzt passen (weniger ginge nur
   noch als „alles auf einer Seite + Rückfrage") und ob der deutsche Ton trifft.
