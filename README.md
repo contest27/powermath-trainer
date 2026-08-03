@@ -28,6 +28,11 @@ no backend. Deployable to GitHub Pages as-is.
 - **Question types**: number pad, multiple choice, true/false, fraction entry,
   tap-to-order — all touch-first. One retry with a hint, then a friendly
   explanation.
+- **Word problems that must be read**: story questions rotate through scenario
+  pools (dealt like a shuffled deck — no story repeats until the whole pool has
+  been seen), with distractor numbers, two-step twists, numbers hidden in words
+  ("in a week") and division remainders that mean different things in different
+  stories — so reading comprehension matters, not pattern-matching.
 - **"Was heißt das?"**: with an API key, every question carries a button that
   explains its *English wording* in German — the words, never the maths. It is
   told in several ways not to solve, calculate or hint, so the child still has

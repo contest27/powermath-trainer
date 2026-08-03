@@ -105,7 +105,28 @@ Project-scope memory. Cross-project lessons go to `~/.claude/MEMORY.md`.
   distinct from `'translate'` (🇩🇪) so the parent can tell "didn't understand the
   lesson" from "couldn't read the question". SW v11.
 
+- **2026-08-03 — Word problems rotate through scenario pools.** Sebastian's
+  complaint: tier-3 story slots were one hardcoded scenario ("5× the stadium
+  problem with new numbers"), so the child pattern-matched instead of reading.
+  `gen.js scenario(rng, key, builders)` deals a per-key shuffled deck of
+  builder indices without replacement (no repeat until the pool is exhausted;
+  no immediate repeat across deck boundaries; state per page load, shuffle from
+  the caller's rng so tests stay deterministic). Pools of 4–9 stories per slot
+  across c5a/c5b/c5c with deliberate STRUCTURE variety, not just nouns:
+  distractor numbers ("the crossing takes 45 minutes"), two-step twists
+  (× then −), the second number hidden in a word ("in a week"), and for
+  division all four remainder readings (round up / round down / remainder
+  itself / share out). Regression-tested: rotation unit test + distinct
+  digit-masked prompt shells across consecutive draws. SW v12.
+
 ## Learnings
+
+- [LEARN:ui] `Element.append(null)` inserts a **visible text node "null"** —
+  native append stringifies non-nodes; only our `h()` helper filters falsy
+  children. Guard optional rows at the call site (`const x = maybeRow(); if (x)
+  card.append(x)`). Found 2026-08-03: every question card showed "null" when no
+  API key is stored (wordHelpRow returns null) — invisible on the iPad because
+  the key is set there, real for any fresh install.
 
 - [LEARN:web] The embedded browser pane serves **stale ES modules from the HTTP
   cache even after Ctrl+Shift+R**; `python -m http.server` sends no

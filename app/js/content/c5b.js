@@ -1,7 +1,7 @@
 // Book 5B — Term 2: multiplication & division (2), fractions (1)-(3),
 // decimals and percentages. Follows the official Power Maths Y5 lesson list.
 
-import { num, mc, mcFrom, tf, frac, order, fr, nearMisses, fmt, ri, pick, shuffle } from './gen.js';
+import { num, mc, mcFrom, tf, frac, order, fr, nearMisses, fmt, ri, pick, shuffle, scenario } from './gen.js';
 import { fracBar, fracCircle, barModel, pvGrid } from './vis.js';
 import { gcd } from '../engine/check.js';
 
@@ -79,12 +79,65 @@ export const topics5b = [
           explain: `${a} × ${b / 10} = ${a * (b / 10)}, then × 10 = ${fmt(a * b)}.`,
         });
       }
-      const name = pick(rng, NAMES);
-      const a = ri(rng, 1150, 2450), b = ri(rng, 4, 8);
-      return num(`A stadium has ${b} stands. Each stand seats ${fmt(a)} people. How many seats are there altogether?`, a * b, {
-        tier, hint: `${b} equal groups — multiply.`,
-        explain: `${fmt(a)} × ${b} = ${fmt(a * b)} seats. (${name} counted them all!)`,
-      });
+      return scenario(rng, 'u07-written-mult:t3', [
+        (rng) => {
+          const a = ri(rng, 1150, 2450), b = ri(rng, 4, 8);
+          return num(`A stadium has ${b} stands. Each stand seats ${fmt(a)} people. How many seats are there altogether?`, a * b, {
+            tier, hint: `${b} equal groups — multiply.`,
+            explain: `${fmt(a)} × ${b} = ${fmt(a * b)} seats. (${pick(rng, NAMES)} counted them all!)`,
+          });
+        },
+        (rng) => {
+          const a = ri(rng, 1050, 1950), b = ri(rng, 4, 8), mins = pick(rng, [40, 45, 50]);
+          return num(`A ferry makes ${b} crossings a day and carries ${fmt(a)} passengers each time. A crossing takes ${mins} minutes. How many passengers travel in a day?`, a * b, {
+            tier, hint: 'Careful — one number in this story is not needed at all.',
+            explain: `Only the crossings count: ${fmt(a)} × ${b} = ${fmt(a * b)} passengers. The ${mins} minutes was extra information.`,
+          });
+        },
+        (rng) => {
+          const a = ri(rng, 1150, 2450), b = ri(rng, 4, 8);
+          return num(`A print shop runs off ${fmt(a)} copies of a ${b}-page flyer. How many pages does it print?`, a * b, {
+            tier, hint: `Every copy has ${b} pages.`,
+            explain: `${fmt(a)} copies × ${b} pages = ${fmt(a * b)} pages.`,
+          });
+        },
+        (rng) => {
+          const b = ri(rng, 4, 8), a = ri(rng, 2050, 4950);
+          return num(`A library has ${b} floors, with ${fmt(a)} books on each floor. How many books does the library hold?`, a * b, {
+            tier, hint: 'Equal groups again — which two numbers multiply?',
+            explain: `${fmt(a)} × ${b} = ${fmt(a * b)} books.`,
+          });
+        },
+        (rng) => {
+          const b = ri(rng, 3, 7), a = ri(rng, 1150, 2450);
+          return num(`Each of the ${b} shelves in a warehouse holds ${fmt(a)} tins. How many tins are stored altogether?`, a * b, {
+            tier, hint: 'The number of shelves comes FIRST in this story — read carefully.',
+            explain: `${b} shelves × ${fmt(a)} tins = ${fmt(a * b)} tins.`,
+          });
+        },
+        (rng) => {
+          const b = ri(rng, 4, 8), a = ri(rng, 115, 245);
+          const e = ri(rng, 85, Math.min(320, a * b - 120));
+          return num(`A cinema has ${b} screens with ${a} seats each. Tonight ${e} seats are empty. How many people are watching a film?`, a * b - e, {
+            tier, hint: 'Two steps: first find ALL the seats, then take away the empty ones.',
+            explain: `${a} × ${b} = ${fmt(a * b)} seats; ${fmt(a * b)} − ${e} = ${fmt(a * b - e)} people.`,
+          });
+        },
+        (rng) => {
+          const a = ri(rng, 1150, 2450), b = ri(rng, 3, 6);
+          return num(`A bottling plant fills ${fmt(a)} bottles every hour and packs them into crates of 24. How many bottles does it fill in ${b} hours?`, a * b, {
+            tier, hint: 'Read the QUESTION again — is the crate size needed?',
+            explain: `Bottles per hour × hours: ${fmt(a)} × ${b} = ${fmt(a * b)}. The crates of 24 were not needed.`,
+          });
+        },
+        (rng) => {
+          const a = ri(rng, 1150, 2450);
+          return num(`A bakery sells ${fmt(a)} bread rolls every day. How many rolls does it sell in a week?`, a * 7, {
+            tier, hint: 'The second number is hiding in a WORD, not a digit.',
+            explain: `A week is 7 days: ${fmt(a)} × 7 = ${fmt(a * 7)} rolls.`,
+          });
+        },
+      ]);
     },
   },
 
@@ -140,18 +193,57 @@ export const topics5b = [
           explain: `${a} × ${b % 10} = ${a * (b % 10)}; ${a} × ${Math.floor(b / 10) * 10} = ${a * Math.floor(b / 10) * 10}; sum ${fmt(a * b)}.`,
         });
       }
-      if (rng() < 0.5) {
-        const a = ri(rng, 123, 489), b = ri(rng, 21, 39);
-        return num(`Work out ${fmt(a)} × ${b}.`, a * b, {
-          tier, hint: 'Same two-row plan — just a longer top number.',
-          explain: `${fmt(a)} × ${b % 10} = ${fmt(a * (b % 10))}; ${fmt(a)} × ${Math.floor(b / 10) * 10} = ${fmt(a * Math.floor(b / 10) * 10)}; total ${fmt(a * b)}.`,
-        });
-      }
-      const rows = ri(rng, 22, 38), seats = ri(rng, 24, 46);
-      return num(`A hall has ${rows} rows with ${seats} chairs in each row. How many chairs are there?`, rows * seats, {
-        tier, hint: 'Equal rows — long multiplication.',
-        explain: `${rows} × ${seats} = ${fmt(rows * seats)} chairs.`,
-      });
+      return scenario(rng, 'u07-long-mult:t3', [
+        (rng) => {
+          const a = ri(rng, 123, 489), b = ri(rng, 21, 39);
+          return num(`Work out ${fmt(a)} × ${b}.`, a * b, {
+            tier, hint: 'Same two-row plan — just a longer top number.',
+            explain: `${fmt(a)} × ${b % 10} = ${fmt(a * (b % 10))}; ${fmt(a)} × ${Math.floor(b / 10) * 10} = ${fmt(a * Math.floor(b / 10) * 10)}; total ${fmt(a * b)}.`,
+          });
+        },
+        (rng) => {
+          const rows = ri(rng, 22, 38), seats = ri(rng, 24, 46);
+          return num(`A hall has ${rows} rows with ${seats} chairs in each row. How many chairs are there?`, rows * seats, {
+            tier, hint: 'Equal rows — long multiplication.',
+            explain: `${rows} × ${seats} = ${fmt(rows * seats)} chairs.`,
+          });
+        },
+        (rng) => {
+          const n = ri(rng, 22, 34), kids = ri(rng, 32, 48);
+          return num(`${n} coaches take children to a theme park. Each coach carries ${kids} children. How many children go on the trip?`, n * kids, {
+            tier, hint: `${n} equal coach-loads.`,
+            explain: `${n} × ${kids} = ${fmt(n * kids)} children.`,
+          });
+        },
+        (rng) => {
+          const trays = ri(rng, 24, 46), plants = ri(rng, 22, 38);
+          return num(`A garden centre has ${trays} trays of seedlings. Each tray holds ${plants} plants. How many seedlings is that?`, trays * plants, {
+            tier, hint: 'Trays of equal size — multiply.',
+            explain: `${trays} × ${plants} = ${fmt(trays * plants)} seedlings.`,
+          });
+        },
+        (rng) => {
+          const crates = ri(rng, 24, 42), boxes = ri(rng, 24, 46), lorries = ri(rng, 2, 4);
+          return num(`An egg farm packs ${boxes} egg boxes into each crate. One morning it fills ${crates} crates, and ${lorries} lorries drive them away. How many egg boxes were packed?`, crates * boxes, {
+            tier, hint: 'One of the three numbers has nothing to do with the question.',
+            explain: `${crates} crates × ${boxes} boxes = ${fmt(crates * boxes)}. The ${lorries} lorries were extra information.`,
+          });
+        },
+        (rng) => {
+          const c = ri(rng, 32, 48);
+          return num(`A café serves ${c} customers every day in February. February has 28 days. How many customers is that altogether?`, c * 28, {
+            tier, hint: 'Which two numbers belong together here?',
+            explain: `${c} × 28 = ${fmt(c * 28)} customers.`,
+          });
+        },
+        (rng) => {
+          const rows = ri(rng, 22, 36), seats = ri(rng, 24, 42), extra = ri(rng, 25, 65);
+          return num(`For the school play, ${rows} rows of ${seats} chairs are set out, plus ${extra} extra chairs at the back. How many chairs are there in total?`, rows * seats + extra, {
+            tier, hint: 'Multiply the rows first, THEN deal with the extras.',
+            explain: `${rows} × ${seats} = ${fmt(rows * seats)}; + ${extra} = ${fmt(rows * seats + extra)} chairs.`,
+          });
+        },
+      ]);
     },
   },
 
@@ -215,26 +307,77 @@ export const topics5b = [
           explain: `${d} × ${q} = ${d * q}, and ${d * q + r} − ${d * q} = ${r} left over.`,
         });
       }
-      const kind = ri(rng, 1, 3);
-      if (kind === 1) {
-        const d = ri(rng, 4, 8), q = ri(rng, 320, 980);
-        return num(`Work out ${fmt(d * q)} ÷ ${d}.`, q, {
-          tier, hint: 'Bus stop method — keep the columns tidy.',
-          explain: `${q} × ${d} = ${fmt(d * q)} confirms it.`,
-        });
-      }
-      const d = pick(rng, [4, 6, 8]), q = ri(rng, 12, 24), r = ri(rng, 1, d - 1);
-      const total = d * q + r;
-      if (kind === 2) {
-        return num(`${total} children go on a trip. Each minibus seats ${d}. How many minibuses are NEEDED?`, q + 1, {
-          tier, hint: 'Everyone needs a seat — what about the leftover children?',
-          explain: `${total} ÷ ${d} = ${q} r ${r}. The ${r} leftover children still need a bus: ${q + 1} buses.`,
-        });
-      }
-      return num(`${total} eggs are packed into boxes of ${d}. How many FULL boxes are packed?`, q, {
-        tier, hint: 'Only complete boxes count here.',
-        explain: `${total} ÷ ${d} = ${q} r ${r}. The ${r} spare eggs do not fill a box, so ${q} full boxes.`,
-      });
+      // Story division: what the remainder MEANS depends on the story —
+      // round up, round down, report the remainder, or share it out.
+      const deal = (rng) => {
+        const d = pick(rng, [4, 6, 8]), q = ri(rng, 12, 24), r = ri(rng, 1, d - 1);
+        return { d, q, r, total: d * q + r };
+      };
+      return scenario(rng, 'u07-division:t3', [
+        (rng) => {
+          const d = ri(rng, 4, 8), q = ri(rng, 320, 980);
+          return num(`Work out ${fmt(d * q)} ÷ ${d}.`, q, {
+            tier, hint: 'Bus stop method — keep the columns tidy.',
+            explain: `${q} × ${d} = ${fmt(d * q)} confirms it.`,
+          });
+        },
+        (rng) => {
+          const { d, q, r, total } = deal(rng);
+          return num(`${total} children go on a trip. Each minibus seats ${d}. How many minibuses are NEEDED?`, q + 1, {
+            tier, hint: 'Everyone needs a seat — what about the leftover children?',
+            explain: `${total} ÷ ${d} = ${q} r ${r}. The ${r} leftover children still need a bus: ${q + 1} buses.`,
+          });
+        },
+        (rng) => {
+          const { d, q, r, total } = deal(rng);
+          return num(`${total} scouts go camping. Each tent sleeps ${d} scouts. How many tents must they take?`, q + 1, {
+            tier, hint: 'Nobody sleeps outside! Think about the leftover scouts.',
+            explain: `${total} ÷ ${d} = ${q} r ${r}. The ${r} scouts left over need one more tent: ${q + 1} tents.`,
+          });
+        },
+        (rng) => {
+          const { d, q, r, total } = deal(rng);
+          return num(`A lift carries ${d} people at a time. ${total} people are queuing. How many trips must the lift make?`, q + 1, {
+            tier, hint: 'The last few people still need a ride.',
+            explain: `${total} ÷ ${d} = ${q} r ${r}. One extra trip for the last ${r}: ${q + 1} trips.`,
+          });
+        },
+        (rng) => {
+          const { d, q, r, total } = deal(rng);
+          return num(`${total} eggs are packed into boxes of ${d}. How many FULL boxes are packed?`, q, {
+            tier, hint: 'Only complete boxes count here.',
+            explain: `${total} ÷ ${d} = ${q} r ${r}. The ${r} spare eggs do not fill a box, so ${q} full boxes.`,
+          });
+        },
+        (rng) => {
+          const { d, q, r, total } = deal(rng);
+          return num(`A ribbon is ${total} cm long. ${pick(rng, NAMES)} cuts it into pieces of ${d} cm. How many WHOLE pieces is that?`, q, {
+            tier, hint: 'A short leftover snippet is not a whole piece.',
+            explain: `${total} ÷ ${d} = ${q} r ${r}. The last ${r} cm is too short, so ${q} whole pieces.`,
+          });
+        },
+        (rng) => {
+          const { d, q, r, total } = deal(rng);
+          return num(`${total} children sign up for a tournament. Each team must have exactly ${d} players. How many complete teams can be made?`, q, {
+            tier, hint: 'A team with missing players cannot play.',
+            explain: `${total} ÷ ${d} = ${q} r ${r}. The ${r} children left over are not enough for a team: ${q} teams.`,
+          });
+        },
+        (rng) => {
+          const { d, q, r, total } = deal(rng);
+          return num(`The PE teacher shares ${total} balls equally between ${d} classes. How many balls are LEFT OVER?`, r, {
+            tier, hint: 'This time the question wants the remainder itself.',
+            explain: `${total} ÷ ${d} = ${q} r ${r} — each class gets ${q} balls and ${r} are left over.`,
+          });
+        },
+        (rng) => {
+          const { d, q, r, total } = deal(rng);
+          return num(`${d} friends share ${total} marbles as fairly as possible. How many marbles does EACH friend get?`, q, {
+            tier, hint: 'Share them out — the answer is what each person receives.',
+            explain: `${total} ÷ ${d} = ${q} r ${r}: each friend gets ${q} marbles (${r} stay in the bag).`,
+          });
+        },
+      ]);
     },
   },
 
@@ -491,22 +634,70 @@ export const topics5b = [
       const pairs = [[3, 6], [2, 4], [2, 8], [3, 9], [5, 10], [4, 8], [6, 12]];
       const [d1, d2] = pick(rng, pairs);
       const k = d2 / d1;
-      if (rng() < 0.5) {
+      // Shared number pickers keeping every story inside one whole.
+      const subNums = (rng) => {
         const a = ri(rng, 1, d1 - 1);
         const bMax = a * k - 1;
-        if (bMax < 1) return this.gen(rng, tier);
-        const b = ri(rng, 1, bMax);
-        return frac(`Work out ${fr(a, d1)} − ${fr(b, d2)}`, a * k - b, d2, {
-          tier, hint: `Convert first: ${fr(a, d1)} = ${fr(a * k, d2)}.`,
-          explain: `${fr(a * k, d2)} − ${fr(b, d2)} = ${fr(a * k - b, d2)}.`,
-        });
-      }
-      const name = pick(rng, NAMES), name2 = pick(rng, NAMES.filter((n) => n !== name));
-      const a = 1, b = ri(rng, 1, d2 - k - 1);
-      return frac(`${name} eats ${fr(a, d1)} of a pizza and ${name2} eats ${fr(b, d2)}. What fraction of the pizza is eaten?`, a * k + b, d2, {
-        tier, hint: 'Match the denominators, then add.',
-        explain: `${fr(a, d1)} = ${fr(a * k, d2)}; together ${fr(a * k + b, d2)}.`,
-      });
+        return bMax < 1 ? null : { a, b: ri(rng, 1, bMax) };
+      };
+      const addNums = (rng) => {
+        const a = ri(rng, 1, Math.floor((d2 - 2) / k));
+        return { a, b: ri(rng, 1, d2 - a * k - 1) };
+      };
+      const two = (rng) => {
+        const name = pick(rng, NAMES);
+        return [name, pick(rng, NAMES.filter((n) => n !== name))];
+      };
+      const q = scenario(rng, 'u09-addsub-frac:t3', [
+        (rng) => {
+          const n = subNums(rng);
+          if (!n) return null;
+          return frac(`Work out ${fr(n.a, d1)} − ${fr(n.b, d2)}`, n.a * k - n.b, d2, {
+            tier, hint: `Convert first: ${fr(n.a, d1)} = ${fr(n.a * k, d2)}.`,
+            explain: `${fr(n.a * k, d2)} − ${fr(n.b, d2)} = ${fr(n.a * k - n.b, d2)}.`,
+          });
+        },
+        (rng) => {
+          const [name, name2] = two(rng);
+          const { a, b } = addNums(rng);
+          return frac(`${name} eats ${fr(a, d1)} of a pizza and ${name2} eats ${fr(b, d2)}. What fraction of the pizza is eaten?`, a * k + b, d2, {
+            tier, hint: 'Match the denominators, then add.',
+            explain: `${fr(a, d1)} = ${fr(a * k, d2)}; together ${fr(a * k + b, d2)}.`,
+          });
+        },
+        (rng) => {
+          const { a, b } = addNums(rng);
+          return frac(`A jug is ${fr(a, d1)} full. ${pick(rng, NAMES)} pours in another ${fr(b, d2)} of a jug. What fraction of the jug is full now?`, a * k + b, d2, {
+            tier, hint: `Same-size pieces first: ${fr(a, d1)} = ${fr(a * k, d2)}.`,
+            explain: `${fr(a * k, d2)} + ${fr(b, d2)} = ${fr(a * k + b, d2)} of the jug.`,
+          });
+        },
+        (rng) => {
+          const { a, b } = addNums(rng);
+          return frac(`${pick(rng, NAMES)} paints ${fr(a, d1)} of a fence before lunch and ${fr(b, d2)} after lunch. What fraction of the fence is painted?`, a * k + b, d2, {
+            tier, hint: 'Convert to the same denominator, then add the two parts.',
+            explain: `${fr(a, d1)} = ${fr(a * k, d2)}; ${fr(a * k, d2)} + ${fr(b, d2)} = ${fr(a * k + b, d2)}.`,
+          });
+        },
+        (rng) => {
+          const n = subNums(rng);
+          if (!n) return null;
+          return frac(`A bag of flour is ${fr(n.a, d1)} full. ${pick(rng, NAMES)} uses ${fr(n.b, d2)} of the bag for a cake. What fraction of the bag is left?`, n.a * k - n.b, d2, {
+            tier, hint: 'This story takes away — convert, then subtract.',
+            explain: `${fr(n.a, d1)} = ${fr(n.a * k, d2)}; minus ${fr(n.b, d2)} leaves ${fr(n.a * k - n.b, d2)}.`,
+          });
+        },
+        (rng) => {
+          const n = subNums(rng);
+          if (!n) return null;
+          const [name, name2] = two(rng);
+          return frac(`${name} has read ${fr(n.a, d1)} of a book. ${name2} has read ${fr(n.b, d2)} of the same book. How much MORE of the book has ${name} read?`, n.a * k - n.b, d2, {
+            tier, hint: '"How much more" asks for the DIFFERENCE between the two fractions.',
+            explain: `${fr(n.a, d1)} = ${fr(n.a * k, d2)}; ${fr(n.a * k, d2)} − ${fr(n.b, d2)} = ${fr(n.a * k - n.b, d2)}.`,
+          });
+        },
+      ]);
+      return q ?? this.gen(rng, tier);
     },
   },
 
@@ -583,19 +774,51 @@ export const topics5b = [
       }
       const d = pick(rng, [4, 6, 8]);
       const half = d / 2;
-      const name = pick(rng, NAMES);
-      if (rng() < 0.5) {
-        const b = ri(rng, half + 1, d - 1);
-        return frac(`${name} has ${mixed(1, half, d)} m of ribbon and uses ${fr(b, d)} m for a bow. How much ribbon is left? (Answer as a fraction of a metre.)`, d + half - b, d, {
-          tier, hint: `Turn ${mixed(1, half, d)} into ${d === 4 ? 'quarters' : d === 6 ? 'sixths' : 'eighths'} first.`,
-          explain: `${mixed(1, half, d)} = ${fr(d + half, d)}; minus ${fr(b, d)} leaves ${fr(d + half - b, d)} m.`,
-        });
-      }
-      const a = ri(rng, half, d - 1), b = ri(rng, half, d - 1);
-      return frac(`A recipe uses ${fr(a, d)} of a bag of flour for bread and ${fr(b, d)} of a bag for buns. How much flour is used in total? (Improper fractions welcome.)`, a + b, d, {
-        tier, hint: 'Add the tops — the total may pass one whole bag.',
-        explain: `${a} + ${b} = ${a + b}: ${fr(a + b, d)} bags, which is ${mixed(1, a + b - d, d)}.`,
-      });
+      const pieces = d === 4 ? 'quarters' : d === 6 ? 'sixths' : 'eighths';
+      return scenario(rng, 'u09-mixed-addsub:t3', [
+        (rng) => {
+          const b = ri(rng, half + 1, d - 1);
+          return frac(`${pick(rng, NAMES)} has ${mixed(1, half, d)} m of ribbon and uses ${fr(b, d)} m for a bow. How much ribbon is left? (Answer as a fraction of a metre.)`, d + half - b, d, {
+            tier, hint: `Turn ${mixed(1, half, d)} into ${pieces} first.`,
+            explain: `${mixed(1, half, d)} = ${fr(d + half, d)}; minus ${fr(b, d)} leaves ${fr(d + half - b, d)} m.`,
+          });
+        },
+        (rng) => {
+          const a = ri(rng, half, d - 1), b = ri(rng, half + 1, d - 1);
+          return frac(`A recipe uses ${fr(a, d)} of a bag of flour for bread and ${fr(b, d)} of a bag for buns. How much flour is used in total? (Improper fractions welcome.)`, a + b, d, {
+            tier, hint: 'Add the tops — the total may pass one whole bag.',
+            explain: `${a} + ${b} = ${a + b}: ${fr(a + b, d)} bags, which is ${mixed(1, a + b - d, d)}.`,
+          });
+        },
+        (rng) => {
+          const n = ri(rng, 1, d - 2), b = ri(rng, n + 1, d - 1);
+          return frac(`A tin holds ${mixed(1, n, d)} litres of paint. ${pick(rng, NAMES)} uses ${fr(b, d)} litre on a bookshelf. How much paint is left? (Answer as a fraction of a litre.)`, d + n - b, d, {
+            tier, hint: `${fr(n, d)} is too small to give up ${fr(b, d)} — exchange the whole into ${pieces}.`,
+            explain: `${mixed(1, n, d)} = ${fr(d + n, d)}; ${fr(d + n, d)} − ${fr(b, d)} = ${fr(d + n - b, d)} litre.`,
+          });
+        },
+        (rng) => {
+          const a = ri(rng, half, d - 1), b = ri(rng, half + 1, d - 1);
+          return frac(`A puppy eats ${fr(a, d)} of a tin of food in the morning and ${fr(b, d)} in the evening. How much of a tin does it eat each day? (Improper fractions welcome.)`, a + b, d, {
+            tier, hint: 'Same-size pieces — just add the tops, past one whole if needed.',
+            explain: `${a} + ${b} = ${a + b}: ${fr(a + b, d)} tins, which is ${mixed(1, a + b - d, d)}.`,
+          });
+        },
+        (rng) => {
+          const n = ri(rng, 1, d - 2), b = ri(rng, n + 1, d - 1);
+          return frac(`A plank is ${mixed(2, n, d)} m long. ${pick(rng, NAMES)} saws off ${fr(b, d)} m. How long is the plank now? (Improper fractions welcome.)`, 2 * d + n - b, d, {
+            tier, hint: `Exchange one whole metre into ${pieces} before subtracting.`,
+            explain: `${mixed(2, n, d)} = ${fr(2 * d + n, d)}; ${fr(2 * d + n, d)} − ${fr(b, d)} = ${fr(2 * d + n - b, d)} m.`,
+          });
+        },
+        (rng) => {
+          const n = ri(rng, 1, d - 1), b = ri(rng, 1, d - 1);
+          return frac(`Two parcels weigh ${mixed(1, n, d)} kg and ${fr(b, d)} kg. How much do they weigh together? (Improper fractions welcome.)`, d + n + b, d, {
+            tier, hint: `Write ${mixed(1, n, d)} as ${pieces} first, then add the tops.`,
+            explain: `${mixed(1, n, d)} = ${fr(d + n, d)}; plus ${fr(b, d)} makes ${fr(d + n + b, d)} kg.`,
+          });
+        },
+      ]);
     },
   },
 
@@ -672,10 +895,32 @@ export const topics5b = [
         });
       }
       const d = pick(rng, [5, 8]), n = ri(rng, 2, d - 1), k = ri(rng, 3, 5);
-      return frac(`One lap of a park is ${fr(n, d)} km. ${pick(rng, NAMES)} runs ${k} laps. How far is that? (Answer as a fraction of a km.)`, n * k, d, {
-        tier, hint: `${k} equal laps: multiply the fraction by ${k}.`,
-        explain: `${fr(n, d)} × ${k} = ${fr(n * k, d)} km.`,
-      });
+      return scenario(rng, 'u10-mult-frac:t3', [
+        (rng) => frac(`One lap of a park is ${fr(n, d)} km. ${pick(rng, NAMES)} runs ${k} laps. How far is that? (Answer as a fraction of a km.)`, n * k, d, {
+          tier, hint: `${k} equal laps: multiply the fraction by ${k}.`,
+          explain: `${fr(n, d)} × ${k} = ${fr(n * k, d)} km.`,
+        }),
+        (rng) => frac(`Each mug holds ${fr(n, d)} litre of hot chocolate. ${k} mugs are filled. How much hot chocolate is that? (Answer as a fraction of a litre.)`, n * k, d, {
+          tier, hint: 'Same fraction, again and again — multiply the top only.',
+          explain: `${fr(n, d)} × ${k} = ${fr(n * k, d)} litres.`,
+        }),
+        (rng) => frac(`One batch of biscuits uses ${fr(n, d)} of a block of butter. ${pick(rng, NAMES)} bakes ${k} batches. How much butter is used? (Answer as a fraction of a block.)`, n * k, d, {
+          tier, hint: `${k} batches, each needing ${fr(n, d)} of a block.`,
+          explain: `${fr(n, d)} × ${k} = ${fr(n * k, d)} blocks of butter.`,
+        }),
+        (rng) => frac(`Each flower bed needs ${fr(n, d)} of a bag of compost. How much compost do ${k} beds need? (Answer as a fraction of a bag.)`, n * k, d, {
+          tier, hint: 'Repeated addition in disguise — multiply.',
+          explain: `${fr(n, d)} + … (${k} times) = ${fr(n * k, d)} bags.`,
+        }),
+        (rng) => frac(`${pick(rng, NAMES)} walks ${fr(n, d)} km to school. How far is that over ${k} mornings? (Answer as a fraction of a km.)`, n * k, d, {
+          tier, hint: 'The same walk every morning — multiply the fraction.',
+          explain: `${fr(n, d)} × ${k} = ${fr(n * k, d)} km.`,
+        }),
+        (rng) => frac(`${pick(rng, NAMES)} cuts ${fr(n, d)} m from each of ${k} rolls of ribbon. Each roll is 5 m long. How much ribbon is cut off altogether? (Answer as a fraction of a metre.)`, n * k, d, {
+          tier, hint: 'Watch out — one number in the story plays no part in the answer.',
+          explain: `${fr(n, d)} × ${k} = ${fr(n * k, d)} m. The 5 m roll length was extra information.`,
+        }),
+      ]);
     },
   },
 
@@ -738,30 +983,76 @@ export const topics5b = [
           explain: `${n} ÷ ${d} = ${unitVal}, then × ${top} = ${unitVal * top}.`,
         });
       }
-      const kind = ri(rng, 1, 3);
-      if (kind === 1) {
-        const d = pick(rng, [3, 4, 5, 8]);
-        const piece = ri(rng, 5, 15);
-        return num(`${fr(1, d)} of a number is ${piece}. What is the number?`, piece * d, {
-          tier, hint: `One piece is ${piece} — how many pieces make the whole?`,
-          explain: `${piece} × ${d} = ${piece * d}.`,
-        });
-      }
-      if (kind === 2) {
-        const d = 5, top = ri(rng, 2, 3);
+      // Three story shapes: whole from one part, whole from several parts,
+      // and "how many are left" — the wording decides the plan.
+      const partWhole = (rng) => {
+        const d = pick(rng, [4, 5, 8]), top = ri(rng, 2, 3);
         const unitVal = ri(rng, 4, 9);
-        return num(`${fr(top, d)} of the children in a club are girls. There are ${top * unitVal} girls. How many children are in the club?`, d * unitVal, {
-          tier, hint: `${top} slices are worth ${top * unitVal} — find one slice first.`,
-          explain: `One fifth = ${top * unitVal} ÷ ${top} = ${unitVal}; whole club = ${unitVal} × 5 = ${d * unitVal}.`,
-        });
-      }
-      const d = pick(rng, [4, 5, 10]), top = ri(rng, 2, d - 1);
-      const unitVal = ri(rng, 6, 12);
-      const total = d * unitVal;
-      return num(`A shop has ${total} apples and sells ${fr(top, d)} of them. How many apples are LEFT?`, total - top * unitVal, {
-        tier, hint: 'Find the fraction sold first, then subtract from the total.',
-        explain: `Sold: ${total} ÷ ${d} × ${top} = ${top * unitVal}. Left: ${total} − ${top * unitVal} = ${total - top * unitVal}.`,
-      });
+        return { d, top, unitVal, part: top * unitVal, whole: d * unitVal };
+      };
+      const leftOver = (rng) => {
+        const d = pick(rng, [4, 5, 10]), top = ri(rng, 2, d - 1);
+        const unitVal = ri(rng, 6, 12);
+        return { d, top, unitVal, total: d * unitVal, taken: top * unitVal };
+      };
+      return scenario(rng, 'u10-frac-amounts:t3', [
+        (rng) => {
+          const d = pick(rng, [3, 4, 5, 8]), piece = ri(rng, 5, 15);
+          return num(`${fr(1, d)} of a number is ${piece}. What is the number?`, piece * d, {
+            tier, hint: `One piece is ${piece} — how many pieces make the whole?`,
+            explain: `${piece} × ${d} = ${piece * d}.`,
+          });
+        },
+        (rng) => {
+          const d = pick(rng, [3, 4, 5]), piece = ri(rng, 5, 15);
+          return num(`${pick(rng, NAMES)} spends ${fr(1, d)} of some savings on a game. The game costs £${piece}. How much was saved altogether, in pounds?`, piece * d, {
+            tier, hint: `£${piece} is just ONE of ${d} equal parts.`,
+            explain: `£${piece} × ${d} = £${piece * d}.`,
+          });
+        },
+        (rng) => {
+          const s = partWhole(rng);
+          return num(`${fr(s.top, s.d)} of the children in a club are girls. There are ${s.part} girls. How many children are in the club?`, s.whole, {
+            tier, hint: `${s.top} slices are worth ${s.part} — find one slice first.`,
+            explain: `One part = ${s.part} ÷ ${s.top} = ${s.unitVal}; the whole club = ${s.unitVal} × ${s.d} = ${s.whole}.`,
+          });
+        },
+        (rng) => {
+          const s = partWhole(rng);
+          return num(`${fr(s.top, s.d)} of the tickets for a show have been sold — that is ${s.part} tickets. How many tickets are there altogether?`, s.whole, {
+            tier, hint: `${s.part} tickets make ${s.top} parts. What is one part worth?`,
+            explain: `One part = ${s.part} ÷ ${s.top} = ${s.unitVal}; all ${s.d} parts = ${s.unitVal} × ${s.d} = ${s.whole} tickets.`,
+          });
+        },
+        (rng) => {
+          const s = partWhole(rng);
+          return num(`${pick(rng, NAMES)} has read ${fr(s.top, s.d)} of a book — ${s.part} pages so far. How many pages does the whole book have?`, s.whole, {
+            tier, hint: 'Work back from the part to one slice, then up to the whole.',
+            explain: `${s.part} ÷ ${s.top} = ${s.unitVal} pages per part; × ${s.d} = ${s.whole} pages.`,
+          });
+        },
+        (rng) => {
+          const s = leftOver(rng);
+          return num(`A shop has ${s.total} apples and sells ${fr(s.top, s.d)} of them. How many apples are LEFT?`, s.total - s.taken, {
+            tier, hint: 'Find the fraction sold first, then subtract from the total.',
+            explain: `Sold: ${s.total} ÷ ${s.d} × ${s.top} = ${s.taken}. Left: ${s.total} − ${s.taken} = ${s.total - s.taken}.`,
+          });
+        },
+        (rng) => {
+          const s = leftOver(rng);
+          return num(`${pick(rng, NAMES)} has ${s.total} stickers and gives ${fr(s.top, s.d)} of them away. How many stickers are KEPT?`, s.total - s.taken, {
+            tier, hint: 'The question asks about what remains, not what is given away.',
+            explain: `Given away: ${s.total} ÷ ${s.d} × ${s.top} = ${s.taken}. Kept: ${s.total} − ${s.taken} = ${s.total - s.taken}.`,
+          });
+        },
+        (rng) => {
+          const s = leftOver(rng);
+          return num(`A water tank holds ${s.total} litres. ${fr(s.top, s.d)} of the water is used. How many litres are LEFT in the tank?`, s.total - s.taken, {
+            tier, hint: `Used first (÷ ${s.d}, × ${s.top}), then take it away from ${s.total}.`,
+            explain: `Used: ${s.total} ÷ ${s.d} × ${s.top} = ${s.taken}. Left: ${s.total} − ${s.taken} = ${s.total - s.taken} litres.`,
+          });
+        },
+      ]);
     },
   },
 
@@ -1028,10 +1319,16 @@ export const topics5b = [
       }
       if (kind === 2) {
         const p = pick(rng, [20, 25, 30, 35, 40, 45, 60, 65, 70, 75]);
-        return num(`In a survey, ${p}% of children chose football. What percentage did NOT choose football?`, 100 - p, {
+        const opts = {
           tier, hint: 'The whole is always 100%.',
           explain: `100% − ${p}% = ${100 - p}%.`,
-        });
+        };
+        return scenario(rng, 'u11-percent:t3-complement', [
+          (rng) => num(`In a survey, ${p}% of children chose football. What percentage did NOT choose football?`, 100 - p, opts),
+          (rng) => num(`${p}% of the children in a school walk to school. What percentage travel some other way?`, 100 - p, opts),
+          (rng) => num(`A tablet's battery is at ${p}%. What percentage of the battery has been used?`, 100 - p, opts),
+          (rng) => num(`In a car park, ${p}% of the cars are electric. What percentage are NOT electric?`, 100 - p, opts),
+        ]);
       }
       const [n, d, p] = pick(rng, family);
       return num(`Write ${fr(n, d)} as a percentage. (Just the number.)`, p, {

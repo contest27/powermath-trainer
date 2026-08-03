@@ -2,7 +2,7 @@
 // multiplication & division (1), area & perimeter.
 // Topic structure and vocabulary follow the official Power Maths Y5 lesson list.
 
-import { num, mc, mcFrom, tf, order, nearMisses, fmt, ri, pick, shuffle, distinctInts } from './gen.js';
+import { num, mc, mcFrom, tf, order, nearMisses, fmt, ri, pick, shuffle, distinctInts, scenario } from './gen.js';
 import { pvGrid, numberLine, barModel, partWhole, rectGrid, lShape, barChart, lineGraph, dataTable } from './vis.js';
 
 const NAMES = ['Ava', 'Ben', 'Chloe', 'Dev', 'Emma', 'Finn', 'Grace', 'Hugo', 'Isla', 'Jack'];
@@ -579,14 +579,20 @@ export const topics5a = [
       if (tier === 1) {
         const a = ri(rng, 12, 48) * 100, b = ri(rng, 12, 48) * 100;
         if (rng() < 0.5) {
-          return num(`${name} collects ${fmt(a)} tokens and ${name2} collects ${fmt(b)}. How many tokens do they collect altogether?`, a + b, {
+          const thing = pick(rng, ['tokens', 'shells', 'conkers', 'stickers']);
+          return num(`${name} collects ${fmt(a)} ${thing} and ${name2} collects ${fmt(b)}. How many ${thing} do they collect altogether?`, a + b, {
             tier, svg: barModel(a + b, [a, b], { partLabels: [fmt(a), fmt(b)], wholeLabel: '?' }),
             hint: 'The whole is missing — add the parts.',
             explain: `${fmt(a)} + ${fmt(b)} = ${fmt(a + b)}.`,
           });
         }
         const whole = a + b;
-        return num(`A jar holds ${fmt(whole)} beads. ${fmt(a)} are red and the rest are blue. How many are blue?`, b, {
+        const [holder, thing, c1, c2] = pick(rng, [
+          ['A jar', 'beads', 'red', 'blue'],
+          ['A box', 'marbles', 'green', 'yellow'],
+          ['A tin', 'buttons', 'large', 'small'],
+        ]);
+        return num(`${holder} holds ${fmt(whole)} ${thing}. ${fmt(a)} are ${c1} and the rest are ${c2}. How many are ${c2}?`, b, {
           tier, svg: barModel(whole, [a, b], { partLabels: [fmt(a), '?'], wholeLabel: fmt(whole) }),
           hint: 'A part is missing — subtract the part you know from the whole.',
           explain: `${fmt(whole)} − ${fmt(a)} = ${fmt(b)}.`,
@@ -596,32 +602,57 @@ export const topics5a = [
         if (rng() < 0.5) {
           const bScore = ri(rng, 20, 70) * 100, diff = ri(rng, 4, 19) * 100;
           const aScore = bScore + diff;
-          return num(`${name} scores ${fmt(aScore)} points — that is ${fmt(diff)} more than ${name2}. How many points does ${name2} score?`, bScore, {
+          const where = pick(rng, ['in a quiz', 'in a video game', 'in a spelling competition']);
+          return num(`${name} scores ${fmt(aScore)} points ${where} — that is ${fmt(diff)} more than ${name2}. How many points does ${name2} score?`, bScore, {
             tier, hint: `${name} has the BIGGER score. Find the smaller one.`,
             explain: `${name2}'s bar is shorter: ${fmt(aScore)} − ${fmt(diff)} = ${fmt(bScore)}.`,
           });
         }
         const start = ri(rng, 50, 95) * 100, s1 = ri(rng, 8, 25) * 100, s2 = ri(rng, 8, 25) * 100;
-        return num(`A game gives ${name} ${fmt(start)} coins. ${name.endsWith('a') ? 'She' : 'He'} spends ${fmt(s1)} on a shield and ${fmt(s2)} on a map. How many coins are left?`, start - s1 - s2, {
+        const [what, buy1, buy2] = pick(rng, [
+          ['coins', 'a shield', 'a map'],
+          ['tokens', 'a go on the big wheel', 'the ghost train'],
+          ['star points', 'a poster', 'a badge'],
+        ]);
+        return num(`A game gives ${name} ${fmt(start)} ${what}. ${name.endsWith('a') ? 'She' : 'He'} spends ${fmt(s1)} on ${buy1} and ${fmt(s2)} on ${buy2}. How many ${what} are left?`, start - s1 - s2, {
           tier, hint: 'Two steps: spend once, then spend again.',
           explain: `${fmt(start)} − ${fmt(s1)} = ${fmt(start - s1)}, then − ${fmt(s2)} = ${fmt(start - s1 - s2)}.`,
         });
       }
-      if (rng() < 0.5) {
-        const mon = ri(rng, 15, 45);
-        const total = mon * 3 + ri(rng, 20, 120);
-        return num(`A book has ${fmt(total)} pages. ${name} reads ${mon} pages on Monday and twice as many on Tuesday. How many pages are left to read?`, total - mon * 3, {
-          tier, hint: 'First find Tuesday, then the total read, then subtract.',
-          explain: `Tuesday = ${mon * 2}. Read so far = ${mon} + ${mon * 2} = ${mon * 3}. Left = ${fmt(total)} − ${mon * 3} = ${fmt(total - mon * 3)}.`,
-        });
-      }
-      const target = ri(rng, 60, 95) * 100, d1 = ri(rng, 12, 30) * 100, d2 = ri(rng, 12, 30) * 100;
-      if (d1 + d2 >= target) return this.gen(rng, tier);
-      return num(`A school wants to collect ${fmt(target)} bottle tops. Class A brings ${fmt(d1)} and Class B brings ${fmt(d2)}. How many more tops are needed?`, target - d1 - d2, {
-        tier, svg: barModel(target, [d1, d2, target - d1 - d2], { partLabels: [fmt(d1), fmt(d2), '?'], wholeLabel: fmt(target) }),
-        hint: 'Add what they have, then compare with the target.',
-        explain: `${fmt(d1)} + ${fmt(d2)} = ${fmt(d1 + d2)}; ${fmt(target)} − ${fmt(d1 + d2)} = ${fmt(target - d1 - d2)}.`,
-      });
+      const q = scenario(rng, 'u03-problems:t3', [
+        (rng) => {
+          const mon = ri(rng, 15, 45);
+          const total = mon * 3 + ri(rng, 20, 120);
+          return num(`A book has ${fmt(total)} pages. ${name} reads ${mon} pages on Monday and twice as many on Tuesday. How many pages are left to read?`, total - mon * 3, {
+            tier, hint: 'First find Tuesday, then the total read, then subtract.',
+            explain: `Tuesday = ${mon * 2}. Read so far = ${mon} + ${mon * 2} = ${mon * 3}. Left = ${fmt(total)} − ${mon * 3} = ${fmt(total - mon * 3)}.`,
+          });
+        },
+        (rng) => {
+          const target = ri(rng, 60, 95) * 100, d1 = ri(rng, 12, 30) * 100, d2 = ri(rng, 12, 30) * 100;
+          if (d1 + d2 >= target) return null;
+          return num(`A school wants to collect ${fmt(target)} bottle tops. Class A brings ${fmt(d1)} and Class B brings ${fmt(d2)}. How many more tops are needed?`, target - d1 - d2, {
+            tier, svg: barModel(target, [d1, d2, target - d1 - d2], { partLabels: [fmt(d1), fmt(d2), '?'], wholeLabel: fmt(target) }),
+            hint: 'Add what they have, then compare with the target.',
+            explain: `${fmt(d1)} + ${fmt(d2)} = ${fmt(d1 + d2)}; ${fmt(target)} − ${fmt(d1 + d2)} = ${fmt(target - d1 - d2)}.`,
+          });
+        },
+        (rng) => {
+          const d1 = ri(rng, 12, 38) * 100, d2 = ri(rng, 12, 38) * 100, runners = ri(rng, 150, 850);
+          return num(`A charity fun run raises £${fmt(d1)} on Saturday and £${fmt(d2)} on Sunday. ${fmt(runners)} runners take part. How much money is raised altogether, in pounds?`, d1 + d2, {
+            tier, hint: 'Read the question — which numbers does it actually ask about?',
+            explain: `£${fmt(d1)} + £${fmt(d2)} = £${fmt(d1 + d2)}. The number of runners was extra information.`,
+          });
+        },
+        (rng) => {
+          const x = ri(rng, 12, 45) * 100, y = ri(rng, 4, 18) * 100;
+          return num(`${name} collects ${fmt(x)} points. ${name2} collects ${fmt(y)} MORE points than ${name}. How many points do they collect together?`, x + x + y, {
+            tier, hint: `Two steps: first find ${name2}'s points, then add both totals.`,
+            explain: `${name2}: ${fmt(x)} + ${fmt(y)} = ${fmt(x + y)}. Together: ${fmt(x)} + ${fmt(x + y)} = ${fmt(x + x + y)}.`,
+          });
+        },
+      ]);
+      return q ?? this.gen(rng, tier);
     },
   },
 
@@ -1012,11 +1043,16 @@ export const topics5a = [
           explain: `Sliding the cut sides out rebuilds the ${a} × ${b} rectangle: perimeter = 2 × (${a} + ${b}) = ${2 * (a + b)} cm.`,
         });
       }
-      const l = ri(rng, 8, 20), w = ri(rng, 5, 12), gate = ri(rng, 1, 3);
-      return num(`A rectangular garden is ${l} m by ${w} m. A fence goes all the way round except a ${gate} m gate. How many metres of fence are needed?`, 2 * (l + w) - gate, {
-        tier, unit: 'm', hint: 'Find the full perimeter, then remove the gate.',
-        explain: `Perimeter 2 × (${l} + ${w}) = ${2 * (l + w)} m, minus the ${gate} m gate = ${2 * (l + w) - gate} m.`,
-      });
+      const l = ri(rng, 8, 20), w = ri(rng, 5, 12), gap = ri(rng, 1, 3);
+      const opts = {
+        tier, unit: 'm', hint: 'Find the full perimeter, then remove the opening.',
+        explain: `Perimeter 2 × (${l} + ${w}) = ${2 * (l + w)} m, minus the ${gap} m opening = ${2 * (l + w) - gap} m.`,
+      };
+      return scenario(rng, 'u05-perimeter:t3-fence', [
+        (rng) => num(`A rectangular garden is ${l} m by ${w} m. A fence goes all the way round except a ${gap} m gate. How many metres of fence are needed?`, 2 * (l + w) - gap, opts),
+        (rng) => num(`A chicken run is a ${l} m by ${w} m rectangle. Wire netting goes round every side except a ${gap} m gate. How many metres of netting are needed?`, 2 * (l + w) - gap, opts),
+        (rng) => num(`Fairy lights run all the way round a ${l} m by ${w} m stage, leaving a ${gap} m opening for the steps. How many metres of lights are needed?`, 2 * (l + w) - gap, opts),
+      ]);
     },
   },
 

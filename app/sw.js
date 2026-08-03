@@ -1,7 +1,7 @@
 // Precaching service worker. Bump CACHE_VERSION on every deploy so clients
 // pick up new content; old caches are cleared on activate.
 
-const CACHE_VERSION = 'pmtrainer-v11';
+const CACHE_VERSION = 'pmtrainer-v12';
 
 // Watch-episode MP3s live in their own long-lived cache that SURVIVES
 // CACHE_VERSION bumps (they are content-addressed by episode folder and never

@@ -49,6 +49,32 @@ export function order(prompt, rng, correctOrder, { tier = 2, svg = '', hint = ''
   };
 }
 
+// Scenario rotation ------------------------------------------------------------
+// Word-problem slots hand a pool of builder functions to scenario(); indices
+// are dealt like a shuffled deck, without replacement, so the child never sees
+// the same story again until the whole pool has been used — and never twice in
+// a row across deck boundaries. Deck state lives for the page load (a session
+// is built in one go, so one build never repeats a story); shuffles draw from
+// the caller's rng, keeping the test sweep deterministic.
+const decks = new Map();
+
+export function scenario(rng, key, builders) {
+  const n = builders.length;
+  const prev = decks.get(key);
+  let deck = prev && prev.n === n && prev.left.length ? prev : null;
+  if (!deck) {
+    const left = shuffle(rng, [...Array(n).keys()]);
+    // left is drawn from the end; avoid starting where the old deck stopped.
+    if (n > 1 && prev && left[n - 1] === prev.last) {
+      [left[0], left[n - 1]] = [left[n - 1], left[0]];
+    }
+    deck = { n, left, last: -1 };
+    decks.set(key, deck);
+  }
+  deck.last = deck.left.pop();
+  return builders[deck.last](rng);
+}
+
 // Distractor helpers -----------------------------------------------------------
 
 // Plausible wrong numbers near a correct value.

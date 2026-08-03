@@ -1,7 +1,7 @@
 // Book 5C — Term 3: decimals, geometry (shapes, position & direction),
 // converting units, volume. Follows the official Power Maths Y5 lesson list.
 
-import { num, mc, mcFrom, tf, order, money, fmt, ri, pick, shuffle } from './gen.js';
+import { num, mc, mcFrom, tf, order, money, fmt, ri, pick, shuffle, scenario } from './gen.js';
 import { angleDiagram, coordGrid, rectGrid } from './vis.js';
 
 const NAMES = ['Ava', 'Ben', 'Chloe', 'Dev', 'Emma', 'Finn', 'Grace', 'Hugo', 'Isla', 'Jack'];
@@ -69,7 +69,8 @@ export const topics5c = [
       if (tier === 2) {
         if (rng() < 0.5) {
           const a = ri(rng, 150, 899), b = ri(rng, 150, 899);
-          return num(`${pick(rng, NAMES)} buys a comic for ${money(dec2(a))} and a snack for ${money(dec2(b))}. What is the total? (Just the number, e.g. 4.75)`, dec2(a + b), {
+          const [it1, it2] = pick(rng, [['a comic', 'a snack'], ['a magazine', 'a carton of juice'], ['a notebook', 'a keyring'], ['a sticker album', 'an ice lolly']]);
+          return num(`${pick(rng, NAMES)} buys ${it1} for ${money(dec2(a))} and ${it2} for ${money(dec2(b))}. What is the total? (Just the number, e.g. 4.75)`, dec2(a + b), {
             tier, allowDecimal: true, tolerance: 0.001,
             hint: 'Add the pence, then the pounds — or use columns.',
             explain: `${money(dec2(a))} + ${money(dec2(b))} = ${money(dec2(a + b))}.`,
@@ -82,20 +83,48 @@ export const topics5c = [
           explain: `${(a / 10).toFixed(2)} + ${dec2(b)} = ${dec2(a * 10 + b)}.`,
         });
       }
-      if (rng() < 0.5) {
-        const price = ri(rng, 215, 785);
-        return num(`${pick(rng, NAMES)} pays for a ${money(dec2(price))} toy with a £10 note. How much change? (Just the number.)`, dec2(1000 - price), {
-          tier, allowDecimal: true, tolerance: 0.001,
-          hint: 'Count up: to the next 10p, to the next pound, then to £10.',
-          explain: `10.00 − ${dec2(price)} = ${dec2(1000 - price)}.`,
-        });
-      }
-      const a = ri(rng, 105, 460), b = ri(rng, 105, 460), c = ri(rng, 105, 460);
-      return num(`A relay team runs three legs: ${dec2(a)} km, ${dec2(b)} km and ${dec2(c)} km. How far altogether?`, dec2(a + b + c), {
-        tier, allowDecimal: true, tolerance: 0.001, unit: 'km',
-        hint: 'Add two first, then add the third.',
-        explain: `${dec2(a)} + ${dec2(b)} = ${dec2(a + b)}, then + ${dec2(c)} = ${dec2(a + b + c)} km.`,
-      });
+      return scenario(rng, 'u12-addsub-dec:t3', [
+        (rng) => {
+          const price = ri(rng, 215, 785);
+          return num(`${pick(rng, NAMES)} pays for a ${money(dec2(price))} toy with a £10 note. How much change? (Just the number.)`, dec2(1000 - price), {
+            tier, allowDecimal: true, tolerance: 0.001,
+            hint: 'Count up: to the next 10p, to the next pound, then to £10.',
+            explain: `10.00 − ${dec2(price)} = ${dec2(1000 - price)}.`,
+          });
+        },
+        (rng) => {
+          const a = ri(rng, 105, 460), b = ri(rng, 105, 460), c = ri(rng, 105, 460);
+          return num(`A relay team runs three legs: ${dec2(a)} km, ${dec2(b)} km and ${dec2(c)} km. How far altogether?`, dec2(a + b + c), {
+            tier, allowDecimal: true, tolerance: 0.001, unit: 'km',
+            hint: 'Add two first, then add the third.',
+            explain: `${dec2(a)} + ${dec2(b)} = ${dec2(a + b)}, then + ${dec2(c)} = ${dec2(a + b + c)} km.`,
+          });
+        },
+        (rng) => {
+          const a = ri(rng, 150, 420), b = ri(rng, 150, 420);
+          return num(`${pick(rng, NAMES)} buys a sandwich for ${money(dec2(a))} and a smoothie for ${money(dec2(b))}, and pays with a £10 note. How much change? (Just the number.)`, dec2(1000 - a - b), {
+            tier, allowDecimal: true, tolerance: 0.001,
+            hint: 'Two steps: total the shopping first, then find the change from £10.',
+            explain: `${money(dec2(a))} + ${money(dec2(b))} = ${money(dec2(a + b))}; £10 − ${money(dec2(a + b))} = ${money(dec2(1000 - a - b))}.`,
+          });
+        },
+        (rng) => {
+          const a = ri(rng, 28, 60), b = ri(rng, 8, 24);
+          return num(`A jug holds ${dec1(a)} litres of squash. ${dec1(b)} litres are poured into glasses. How much squash is left?`, dec1(a - b), {
+            tier, allowDecimal: true, tolerance: 0.001, unit: 'litres',
+            hint: 'Line up the decimal points and subtract.',
+            explain: `${dec1(a)} − ${dec1(b)} = ${dec1(a - b)} litres.`,
+          });
+        },
+        (rng) => {
+          const a = ri(rng, 105, 285), b = ri(rng, 105, 285);
+          return num(`A recipe uses ${dec2(a)} kg of flour and ${dec2(b)} kg of sugar, baked at 180°C. How many kilograms of ingredients are used? (Just the number.)`, dec2(a + b), {
+            tier, allowDecimal: true, tolerance: 0.001,
+            hint: 'One of the numbers is not a weight at all — leave it out.',
+            explain: `${dec2(a)} + ${dec2(b)} = ${dec2(a + b)} kg. The 180°C is the oven temperature, not an amount.`,
+          });
+        },
+      ]);
     },
   },
 
@@ -623,12 +652,40 @@ export const topics5c = [
           explain: `${kmB} km = ${fmt(kmB * 1000)} m — compare with ${mA} m.`,
         });
       }
-      const flourTenths = ri(rng, 11, 29);
-      const sugarG = ri(rng, 3, 9) * 100;
-      return num(`A baker uses ${dec1(flourTenths)} kg of flour and ${sugarG} g of sugar. How many GRAMS is that altogether?`, dec1(flourTenths) * 1000 + sugarG, {
-        tier, unit: 'g', hint: 'Convert the kilograms into grams first.',
-        explain: `${dec1(flourTenths)} kg = ${fmt(dec1(flourTenths) * 1000)} g; plus ${sugarG} g = ${fmt(dec1(flourTenths) * 1000 + sugarG)} g.`,
-      });
+      return scenario(rng, 'u16-metric:t3-mixed-units', [
+        (rng) => {
+          const flourTenths = ri(rng, 11, 29);
+          const sugarG = ri(rng, 3, 9) * 100;
+          return num(`A baker uses ${dec1(flourTenths)} kg of flour and ${sugarG} g of sugar. How many GRAMS is that altogether?`, dec1(flourTenths) * 1000 + sugarG, {
+            tier, unit: 'g', hint: 'Convert the kilograms into grams first.',
+            explain: `${dec1(flourTenths)} kg = ${fmt(dec1(flourTenths) * 1000)} g; plus ${sugarG} g = ${fmt(dec1(flourTenths) * 1000 + sugarG)} g.`,
+          });
+        },
+        (rng) => {
+          const kgTenths = ri(rng, 12, 48);
+          const boxG = ri(rng, 2, 8) * 50;
+          return num(`A parcel weighs ${dec1(kgTenths)} kg, and its box weighs ${boxG} g. How many GRAMS do they weigh together?`, dec1(kgTenths) * 1000 + boxG, {
+            tier, unit: 'g', hint: 'Different units! Make everything grams before adding.',
+            explain: `${dec1(kgTenths)} kg = ${fmt(dec1(kgTenths) * 1000)} g; plus ${boxG} g = ${fmt(dec1(kgTenths) * 1000 + boxG)} g.`,
+          });
+        },
+        (rng) => {
+          const kmTenths = ri(rng, 12, 38);
+          const extraM = ri(rng, 2, 9) * 50;
+          return num(`${pick(rng, NAMES)} walks ${dec1(kmTenths)} km to the shop and another ${extraM} m to the park. How many METRES is that altogether?`, dec1(kmTenths) * 1000 + extraM, {
+            tier, unit: 'm', hint: 'Turn the kilometres into metres, then add.',
+            explain: `${dec1(kmTenths)} km = ${fmt(dec1(kmTenths) * 1000)} m; plus ${extraM} m = ${fmt(dec1(kmTenths) * 1000 + extraM)} m.`,
+          });
+        },
+        (rng) => {
+          const lTenths = ri(rng, 12, 30);
+          const drinkMl = ri(rng, 2, 8) * 100;
+          return num(`A bottle holds ${dec1(lTenths)} litres of water. ${pick(rng, NAMES)} drinks ${drinkMl} ml. How many MILLILITRES are left?`, dec1(lTenths) * 1000 - drinkMl, {
+            tier, unit: 'ml', hint: 'Convert litres to millilitres first — then this is a subtraction.',
+            explain: `${dec1(lTenths)} litres = ${fmt(dec1(lTenths) * 1000)} ml; minus ${drinkMl} ml = ${fmt(dec1(lTenths) * 1000 - drinkMl)} ml.`,
+          });
+        },
+      ]);
     },
   },
 

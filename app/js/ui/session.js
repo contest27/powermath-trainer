@@ -347,7 +347,8 @@ function itemView(s) {
     h('div', { class: 'prompt', html: q.prompt }), speakerButton(q.prompt, { small: true }));
   card.append(promptRow);
   if (q.svg) card.append(h('div', { class: 'vis', html: q.svg }));
-  card.append(wordHelpRow(q, item));
+  const wordHelp = wordHelpRow(q, item);
+  if (wordHelp) card.append(wordHelp);
 
   const state = { tries: 0, resolved: false };
   const feedback = h('div', { class: 'feedback' });

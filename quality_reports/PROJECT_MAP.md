@@ -1,18 +1,22 @@
 # PowerMath Trainer — Project Map
 
-**Status:** alle sieben Features LIVE (sw v11) — Watch, Schatzkarte, Karten-Übung, Streaming-Tutor, KI-Buddy, Geführte Erklärung, Sprachhilfe · offen: iPad-Abnahme
-**Last updated:** 2026-07-25
+**Status:** alle sieben Features LIVE · Aufgaben-Vielfalt gebaut (sw v12, **Commit + Push ausstehend**) · offen: iPad-Abnahme
+**Last updated:** 2026-08-03
 
-## Recent (updated 2026-07-25)
+## Recent (updated 2026-08-03)
 
-**Active workstream — Geführte Erklärung + Deutsch auf Abruf** (*neues Thema wird Schritt
-für Schritt durchgegangen; Übung schaltet erst nach der Rückfrage „verstanden — oder soll
-ich es dir auf Deutsch erklären?" frei; 🇩🇪-Knopf an jedem Schritt, ohne Key die einfachere
-englische Fassung*). Gebaut, verifiziert: **124 Tests grün**, Tor hält im echten Durchlauf,
-Deutsch-Streaming gegen gemockten SSE-Stream, Fortsetzen mitten in der Lektion, Wiederholungen
-unangetastet. **Committet `a1a28f9`, deployt (sw v10), live verifiziert.**
+**Active workstream — Abwechslungsreiche Textaufgaben** (*Sebastians Befund: „5× die
+gleiche Stadion-Aufgabe mit anderen Zahlen"*). Story-Slots rotieren jetzt durch Szenario-
+Pools (4–9 Geschichten je Slot, Kartendeck ohne Zurücklegen — keine Wiederholung, bis der
+Pool durch ist) mit echter Struktur-Varianz fürs Textverständnis: Distraktor-Zahlen,
+Zweischritt, Zahl als Wort („in a week"), wechselnde Rest-Interpretation bei Division.
+Verifiziert: **129 Tests grün** (Sweep 3.840 Fragen + neue Rotations-/Varianz-Tests),
+Stichproben handgeprüft, UI-Pass 768×1024. Beifang: sichtbares „null" unter jeder Frage
+ohne API-Key gefixt (`append(null)`). **sw v12; Deploy wartet auf „commit"/Push.**
 
-0. [[quality_reports/session_logs/2026-07-25_word-help|📄 Session-Log Sprachhilfe an den Aufgaben]] — „🇩🇪 Was heißt das?", volle Gutschrift (Gegenprobe +5/+5), auch im Check-up. **Neuestes (`c1e0205`, deployt).**
+0. [[quality_reports/session_logs/2026-08-03_word-problem-variety|📄 Session-Log Aufgaben-Vielfalt]] — Diagnose, Pools je Thema, Verifikation. **Start hier.**
+0a. [[quality_reports/plans/2026-08-03_word-problem-variety|Plan Aufgaben-Vielfalt]] — COMPLETED.
+0b. [[quality_reports/session_logs/2026-07-25_word-help|Session-Log Sprachhilfe an den Aufgaben]] — „🇩🇪 Was heißt das?", volle Gutschrift, auch im Check-up (`c1e0205`, deployt).
 1. [[quality_reports/session_logs/2026-07-25_guided-explanation|Session-Log Geführte Erklärung]] — Verlauf + volle Verifikation.
 2. [[quality_reports/plans/2026-07-25_guided-explanation|Approved plan]] — Schrittmodell, Tor, Übersetzung, TTS-Fund.
 3. [[quality_reports/session_logs/2026-07-25_ai-buddy|KI-Buddy]] (deployt, `a8cf2d7`) · [[quality_reports/session_logs/2026-07-24_streaming-tutor|Streaming-Tutor]] · [[quality_reports/session_logs/2026-07-24_map-practice|Karten-Übung]] · [[quality_reports/session_logs/2026-07-24_treasure-map|Schatzkarte]].

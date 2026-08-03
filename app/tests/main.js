@@ -18,6 +18,7 @@ async function run() {
   try {
     mods = {
       rng: await import('../js/engine/rng.js'),
+      gen: await import('../js/content/gen.js'),
       storage: await import('../js/engine/storage.js'),
       mastery: await import('../js/engine/mastery.js'),
       scheduler: await import('../js/engine/scheduler.js'),
@@ -294,6 +295,36 @@ async function run() {
     });
   }
 
+  // ---------------- word-problem variety (scenario rotation)
+  test('scenario: every story is dealt once before any repeats', () => {
+    const { scenario } = mods.gen;
+    const r = makeRng(123);
+    const builders = [0, 1, 2, 3, 4].map((v) => () => v);
+    const draws = [];
+    for (let i = 0; i < 15; i++) draws.push(scenario(r, 'test:rotation', builders));
+    for (let round = 0; round < 3; round++) {
+      eq(draws.slice(round * 5, round * 5 + 5).slice().sort(), [0, 1, 2, 3, 4], `round ${round} must cover the whole pool`);
+    }
+    for (let i = 1; i < draws.length; i++) ok(draws[i] !== draws[i - 1], 'immediate repeat at draw ' + i);
+  });
+
+  test('variety: tier-3 word problems rotate stories, not just numbers', () => {
+    // Regression against "5× the same stadium problem": consecutive tier-3
+    // draws must produce distinct story shells (prompts with digits masked).
+    const shells = (id, draws) => {
+      const t = topicById(id);
+      const s = new Set();
+      for (let i = 0; i < draws; i++) {
+        const rng = makeRng(seedFromString(`variety|${id}|${i}`));
+        s.add(t.gen(rng, 3).prompt.replace(/[\d,]+/g, '#'));
+      }
+      return s.size;
+    };
+    ok(shells('u07-written-mult', 12) >= 6, 'written-mult: too few distinct stories');
+    ok(shells('u07-division', 13) >= 7, 'division: too few distinct stories');
+    ok(shells('u12-addsub-dec', 8) >= 4, 'decimal add/sub: too few distinct stories');
+  });
+
   test('diagnostic: 18 well-formed items covering every strand', () => {
     for (let seed = 0; seed < 20; seed++) {
       const items = diagnosticItems(makeRng(seed + 1));
@@ -509,8 +540,8 @@ async function run() {
   test('lesson: sw precaches the lesson module and the version keeps moving', () => {
     ok(swText, 'sw.js did not load');
     ok(swText.includes("'./js/ui/lesson.js'"), 'sw.js ASSETS missing lesson.js');
-    ok(swText.includes("'pmtrainer-v11'"), 'CACHE_VERSION was not bumped for the word help');
-    ok(!swText.includes("'pmtrainer-v10'"), 'old CACHE_VERSION still present');
+    ok(swText.includes("'pmtrainer-v12'"), 'CACHE_VERSION was not bumped for the word-problem variety release');
+    ok(!swText.includes("'pmtrainer-v11'"), 'old CACHE_VERSION still present');
     for (const p of ["'./js/ui/session.js'", "'./js/tts.js'", "'./js/ui/chat.js'"]) {
       ok(swText.includes(p), 'sw.js ASSETS unexpectedly dropped ' + p);
     }
