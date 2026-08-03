@@ -68,7 +68,8 @@ set), but real for a fresh install. Fixed with a guard; `[LEARN:ui]` added.
 
 ## Open
 
-- Deploy = push to main (not done — needs Sebastian's go) + the iOS
-  second-launch ritual, then spot-check variety on the iPad.
+- ~~Deploy = push to main~~ **Pushed on Sebastian's "push" and verified live:
+  Pages serves sw `pmtrainer-v12` (~40 s after push).** Remaining: the iOS
+  second-launch ritual on the iPad, then spot-check the story variety there.
 - The plan's variety pattern can later extend to lower-priority slots
   (volume/imperial kinds, graphs) if repetition is still felt there.

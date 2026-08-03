@@ -1,6 +1,6 @@
 # PowerMath Trainer — Project Map
 
-**Status:** alle sieben Features LIVE · Aufgaben-Vielfalt gebaut (sw v12, **Commit + Push ausstehend**) · offen: iPad-Abnahme
+**Status:** alle sieben Features + Aufgaben-Vielfalt LIVE (sw v12, `fd9211c`, deployt 2026-08-03) · offen: iPad-Abnahme
 **Last updated:** 2026-08-03
 
 ## Recent (updated 2026-08-03)
@@ -12,7 +12,8 @@ Pool durch ist) mit echter Struktur-Varianz fürs Textverständnis: Distraktor-Z
 Zweischritt, Zahl als Wort („in a week"), wechselnde Rest-Interpretation bei Division.
 Verifiziert: **129 Tests grün** (Sweep 3.840 Fragen + neue Rotations-/Varianz-Tests),
 Stichproben handgeprüft, UI-Pass 768×1024. Beifang: sichtbares „null" unter jeder Frage
-ohne API-Key gefixt (`append(null)`). **sw v12; Deploy wartet auf „commit"/Push.**
+ohne API-Key gefixt (`append(null)`). **Committet `fd9211c`, gepusht + deployt (sw v12
+live auf Pages verifiziert, 2026-08-03).**
 
 0. [[quality_reports/session_logs/2026-08-03_word-problem-variety|📄 Session-Log Aufgaben-Vielfalt]] — Diagnose, Pools je Thema, Verifikation. **Start hier.**
 0a. [[quality_reports/plans/2026-08-03_word-problem-variety|Plan Aufgaben-Vielfalt]] — COMPLETED.
