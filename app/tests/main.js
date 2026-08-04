@@ -52,9 +52,9 @@ async function run() {
     results.push({ name: 'EPISODE/SW FETCH', ok: false, err: String(e) });
   }
   const { makeRng, seedFromString, ri, shuffle } = mods.rng;
-  const { dayKey, addDays, daysBetween, defaultState, exportJSON, parseImport, capState, CHAT_CAP } = mods.storage;
+  const { dayKey, addDays, daysBetween, defaultState, exportJSON, parseImport, capState, hydrate, CHAT_CAP } = mods.storage;
   const { newMastery, updateMastery, bandOf, scheduleAfterSession, diagnosticScore } = mods.mastery;
-  const { planSession, nextNewTopic, dueReviewTopics, NEW_TOPIC_TIERS } = mods.scheduler;
+  const { planSession, nextNewTopic, dueReviewTopics, NEW_TOPIC_TIERS, pacing } = mods.scheduler;
   const { checkAnswer, parseNumber, answerText, gcd } = mods.check;
   const { recordAttempt, completeTopic, finishSession, applyDiagnostic } = mods.progress;
   const { topics, topicOrder, topicById, diagnosticItems } = mods.content;
@@ -349,19 +349,20 @@ async function run() {
   }
   const answerAll = (s, ok = true) => s.items.map((it) => ({ part: it.part, topicId: it.topicId, ok }));
 
-  test('focus: new session builds explanation + 11 practice items, no review', () => {
+  test('focus: new session builds explanation + 7 practice items, no review', () => {
     const st = seededState(3);
     const cur = topicOrder[3];
     const fs = buildFocusSession(st, cur, 'new', D, makeRng(1));
     eq(fs.kind, 'focus-new');
     eq(fs.phase, 'explain');
     eq(fs.newTopic, cur);
-    eq(fs.items.length, 11);
+    eq(fs.items.length, 7);
     ok(fs.items.every((it) => it.part === 'practice' && it.topicId === cur), 'all practice, one topic');
     ok(fs.focus === true && fs.origin === 'map', 'focus flag + map origin');
+    eq(buildFocusSession(st, cur, 'new', D, makeRng(1), 'today').origin, 'today', 'catch-up flow can return to today');
   });
 
-  test('focus: review session builds 8 adaptive items, no explanation', () => {
+  test('focus: review session builds 6 adaptive items, no explanation', () => {
     const st = seededState(4);
     st.mastery[topicOrder[0]] = newMastery(30);
     const fs = buildFocusSession(st, topicOrder[0], 'review', D, makeRng(2));
@@ -369,9 +370,57 @@ async function run() {
     eq(fs.phase, 'items');
     eq(fs.newTopic, null);
     eq(fs.focusTopic, topicOrder[0]);
-    eq(fs.items.length, 8);
+    eq(fs.items.length, 6);
     ok(fs.items.every((it) => it.part === 'review'), 'all review items');
     ok(fs.items.every((it) => [1, 2, 3].includes(it.q.tier)), 'tiers in range');
+  });
+
+  test('scheduler: a daily plan stays short (7-item ramp + at most 4 review)', () => {
+    eq(NEW_TOPIC_TIERS.length, 7, 'new-topic ramp is 7 items');
+    const st = seededState(5);
+    for (const id of st.completed) st.mastery[id].due = '2026-07-19';
+    const plan = planSession(st, topicOrder, D, makeRng(8));
+    ok(plan.review.length > 0 && plan.review.length <= 4, 'review block capped at 4, got ' + plan.review.length);
+    ok(NEW_TOPIC_TIERS.length + plan.review.length <= 11, 'daily stays at 11 questions or fewer');
+  });
+
+  test('pacing: needTwo exactly when the target demands more than one a day', () => {
+    const st = seededState(14);                       // 18 of 32 remaining
+    st.settings.targetDate = '2026-08-16';
+    const p = pacing(st, topicOrder, '2026-08-05');   // 12 days incl. today
+    eq(p.remaining, topicOrder.length - 14);
+    eq(p.daysLeft, 12);
+    ok(p.needTwo, '18 topics in 12 days needs two a day');
+    const easy = seededState(27);                     // 5 remaining
+    easy.settings.targetDate = '2026-08-16';
+    ok(!pacing(easy, topicOrder, '2026-08-05').needTwo, '5 in 12 days is on track');
+    easy.settings.targetDate = '';
+    eq(pacing(easy, topicOrder, '2026-08-05'), null, 'no target, no pacing');
+    const past = seededState(14);
+    past.settings.targetDate = '2026-08-01';
+    eq(pacing(past, topicOrder, '2026-08-05'), null, 'a passed target goes silent');
+    const doneAll = seededState(topicOrder.length);
+    doneAll.settings.targetDate = '2026-08-16';
+    eq(pacing(doneAll, topicOrder, '2026-08-05'), null, 'finished journey needs no pacing');
+  });
+
+  test('storage: hydrate fills new settings keys for legacy states', () => {
+    const legacy = JSON.parse(JSON.stringify(defaultState()));
+    delete legacy.settings.targetDate;
+    legacy.settings.name = 'Theo';
+    const s = hydrate(legacy);
+    eq(s.settings.name, 'Theo', 'stored settings win');
+    eq(s.settings.targetDate, '2026-08-16', 'new settings key filled from defaults');
+    ok(Array.isArray(hydrate({}).chats), 'top-level fill still works');
+  });
+
+  test('progress: one slip in the 7-item ramp still earns 3 stars', () => {
+    const s = defaultState();
+    s.mastery['t'] = newMastery(50);
+    eq(completeTopic(s, 't', 6, 7, '2026-07-20'), 3, '6/7 = 85.7% is 3 stars');
+    const s2 = defaultState();
+    s2.mastery['t'] = newMastery(50);
+    eq(completeTopic(s2, 't', 5, 7, '2026-07-20'), 2, '5/7 = 71% is 2 stars');
   });
 
   test('focus: completing a new current topic marks it completed and advances the journey', () => {
@@ -540,8 +589,8 @@ async function run() {
   test('lesson: sw precaches the lesson module and the version keeps moving', () => {
     ok(swText, 'sw.js did not load');
     ok(swText.includes("'./js/ui/lesson.js'"), 'sw.js ASSETS missing lesson.js');
-    ok(swText.includes("'pmtrainer-v12'"), 'CACHE_VERSION was not bumped for the word-problem variety release');
-    ok(!swText.includes("'pmtrainer-v11'"), 'old CACHE_VERSION still present');
+    ok(swText.includes("'pmtrainer-v13'"), 'CACHE_VERSION was not bumped for the shorter-sessions release');
+    ok(!swText.includes("'pmtrainer-v12'"), 'old CACHE_VERSION still present');
     for (const p of ["'./js/ui/session.js'", "'./js/tts.js'", "'./js/ui/chat.js'"]) {
       ok(swText.includes(p), 'sw.js ASSETS unexpectedly dropped ' + p);
     }

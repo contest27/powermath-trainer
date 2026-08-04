@@ -1,9 +1,10 @@
 # PowerMath Trainer
 
 Daily Year 5 maths practice for the summer holidays — a Power Maths (UK) revision
-app that runs on an iPad as an installable web app. One topic per day, ~20–30
-minutes: an explanation with re-listenable audio segments, a practice block, and
-an adaptive review of earlier topics — weaker topics come back more often.
+app that runs on an iPad as an installable web app. One short topic session a day
+(11 questions: an explanation with re-listenable audio segments, a 7-item practice
+ramp, and a 4-item adaptive review of earlier topics — weaker topics come back
+more often), or two sessions on catch-up days.
 
 Built as a **no-build static app**: plain ES modules, no framework, no bundler,
 no backend. Deployable to GitHub Pages as-is.
@@ -16,6 +17,10 @@ no backend. Deployable to GitHub Pages as-is.
 - **Adaptive review** (Leitner-style): struggling topics return after 1 day,
   developing after 3, secure after 7. Review questions are tiered to the
   child's current level.
+- **Finish-by-target pacing**: a parent-set target date (Parent corner; clear
+  to switch off). The home screen shows the required pace, and whenever the
+  journey needs more than one topic a day, the end-of-session screen offers
+  the next topic with one tap — the offer disappears once one a day is enough.
 - **Guided explanation**: a new topic is walked through one part at a time —
   each segment (tap-to-listen audio, a "say it differently" simpler rephrasing,
   Power Maths visual models), then the worked example, then a check-in: *"Did

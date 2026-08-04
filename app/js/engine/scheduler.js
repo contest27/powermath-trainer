@@ -1,4 +1,5 @@
 import { bandOf } from './mastery.js';
+import { daysBetween } from './storage.js';
 
 // The scheduler answers one question: "what should today's session contain?"
 // New topics go strictly in curriculum order; review is adaptive.
@@ -29,12 +30,27 @@ export function reviewTier(score, rng) {
   return rng() < 0.35 ? 2 : 3;
 }
 
-// Practice ramp for a brand-new topic (11 items, easy -> hard).
-export const NEW_TOPIC_TIERS = [1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3];
+// Practice ramp for a brand-new topic (7 items, easy -> hard). Shortened from
+// 11 on 2026-08-04: 18-question dailies were too long for the summer pace.
+export const NEW_TOPIC_TIERS = [1, 1, 2, 2, 2, 3, 3];
 
-export const REVIEW_ITEMS_DAILY = 7;      // review block appended to a new-topic day
-export const REVIEW_ITEMS_ONLY = 16;      // once the curriculum is finished
+export const REVIEW_ITEMS_DAILY = 4;      // review block appended to a new-topic day
+export const REVIEW_ITEMS_ONLY = 10;      // once the curriculum is finished
 export const MAX_REVIEW_TOPICS = 3;
+
+// Finish-by-target pacing: how many new topics per day are needed to complete
+// the journey by settings.targetDate? Null when there is no target, the target
+// has passed (no nagging after the holiday), or the journey is finished.
+export function pacing(state, topicOrder, today) {
+  const target = state.settings?.targetDate;
+  if (!target || !state.diagnosticDone) return null;
+  const remaining = topicOrder.filter((id) => !state.completed.includes(id)).length;
+  if (!remaining) return null;
+  const daysLeft = daysBetween(today, target) + 1; // today still counts
+  if (daysLeft < 1) return null;
+  const perDay = remaining / daysLeft;
+  return { remaining, daysLeft, perDay, needTwo: perDay > 1 };
+}
 
 // Plan for today's session. Pure: does not mutate state.
 export function planSession(state, topicOrder, today, rng) {

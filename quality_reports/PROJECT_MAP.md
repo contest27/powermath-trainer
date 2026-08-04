@@ -1,11 +1,26 @@
 # PowerMath Trainer — Project Map
 
-**Status:** alle sieben Features + Aufgaben-Vielfalt LIVE (sw v12, `fd9211c`, deployt 2026-08-03) · offen: iPad-Abnahme
-**Last updated:** 2026-08-03
+**Status:** alles bis Aufgaben-Vielfalt LIVE (sw v12) · kürzere Übungen + Zieldatum-Aufholen gebaut (sw v13, **Commit da, Push ausstehend**) · offen: iPad-Abnahme
+**Last updated:** 2026-08-04
 
-## Recent (updated 2026-08-03)
+## Recent (updated 2026-08-04)
 
-**Active workstream — Abwechslungsreiche Textaufgaben** (*Sebastians Befund: „5× die
+**Active workstream — Kürzere Übungen + Aufholen bis 16.8.** (*Sebastians Befund: „18
+Aufgaben pro Übung — wir werden nicht fertig bis 16.8."*). Zwei Hebel: Tages-Session
+**18 → 11 Aufgaben** (7er-Ramp + max. 4 Review; Karten-Übung 8 → 6; 3-Sterne-Schwelle
+0,90 → 0,85, damit ein Flüchtigkeitsfehler bei 7 Aufgaben nicht das dritte Sternchen
+kostet) **und** Zieldatum-Pacing: `settings.targetDate` (Default 16.8., Parent Corner,
+löschen = aus) → Today-Karte zeigt das Tempo; nach jedem abgeschlossenen Thema bietet
+der Summary-Screen per Ein-Tap „🚀 One more topic" das nächste Thema an, solange die
+Rechnung >1 Thema/Tag verlangt (selbstregulierend). Verifiziert: **133 Tests grün**,
+E2E-Durchlauf (Daily 7+4 → Aufhol-Tap → Thema 2 komplett, 16/32) bei 768×1024.
+
+0. [[quality_reports/session_logs/2026-08-04_shorter-sessions-target-pacing|📄 Session-Log Kürzere Übungen + Pacing]] — Diagnose (zwei Probleme in einem Satz), Verifikation. **Start hier.**
+0a. [[quality_reports/plans/2026-08-04_shorter-sessions-target-pacing|Plan Kürzere Übungen]] — COMPLETED.
+
+## Recent-Trail (2026-08-03, deployt)
+
+**Abwechslungsreiche Textaufgaben** (*Sebastians Befund: „5× die
 gleiche Stadion-Aufgabe mit anderen Zahlen"*). Story-Slots rotieren jetzt durch Szenario-
 Pools (4–9 Geschichten je Slot, Kartendeck ohne Zurücklegen — keine Wiederholung, bis der
 Pool durch ist) mit echter Struktur-Varianz fürs Textverständnis: Distraktor-Zahlen,
@@ -23,12 +38,10 @@ live auf Pages verifiziert, 2026-08-03).**
 3. [[quality_reports/session_logs/2026-07-25_ai-buddy|KI-Buddy]] (deployt, `a8cf2d7`) · [[quality_reports/session_logs/2026-07-24_streaming-tutor|Streaming-Tutor]] · [[quality_reports/session_logs/2026-07-24_map-practice|Karten-Übung]] · [[quality_reports/session_logs/2026-07-24_treasure-map|Schatzkarte]].
 4. [[MEMORY|Project memory]] — alle Entscheidungen + iOS-Zweistart-Lesson.
 
-**Open for Sebastian:** geführte Erklärung im Browser ansehen (localhost:8124 → neues Thema)
-und „commit" geben · **auf dem iPad:** beurteilen, ob 6 Schritte pro neuem Thema angenehm sind
-(sonst Eltern-Schalter nachrüstbar) · **weiter offen:** Media-Cache-Probe der Watch-Episode
-(Flugmodus, ohne Nachladen) · Rest der Übernahmeliste: Freitags-Challenge, kuratierte Textaufgaben.
-
-*(Fünf Features dieser Session: Watch, Schatzkarte, Karten-Übung, Streaming-Tutor live; der Buddy wartet auf Commit. Media-Cache-Probe steht noch.)*
+**Open for Sebastian (Stand 2026-08-04):** „push" für die Kürzung/Pacing-Release (sw v13)
+geben · **auf dem iPad:** Zweistart-Ritual, dann prüfen: Übung fühlt sich kurz genug an,
+Aufhol-Knopf erscheint, Zieldatum im Parent Corner passt (Default 16.8.) · **weiter offen:**
+Media-Cache-Probe der Watch-Episode (Flugmodus) · Übernahmeliste: Freitags-Challenge.
 
 <!-- Ältere Recent-Blöcke (Schatzkarte/Watch) siehe Git-History; Trail läuft über die Session-Logs oben. -->
 

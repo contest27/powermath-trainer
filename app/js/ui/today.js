@@ -1,6 +1,6 @@
 import { h, store, go, registerScreen } from './core.js';
 import { bottomNav, progressBar } from './components.js';
-import { planSession } from '../engine/scheduler.js';
+import { planSession, pacing } from '../engine/scheduler.js';
 import { dayKey, daysBetween } from '../engine/storage.js';
 import { makeRng, seedFromString } from '../engine/rng.js';
 import { topicOrder, topicById } from '../content/index.js';
@@ -71,12 +71,19 @@ registerScreen('today', () => {
   }
   wrap.append(card);
 
-  // Curriculum progress
+  // Curriculum progress (+ finish-by-target pace line when one is set)
   const total = topicOrder.length;
   const done = st.completed.length;
+  const pace = pacing(st, topicOrder, today);
+  const [, tm, td] = (st.settings.targetDate || '').split('-');
+  const targetLabel = td ? `${Number(td)} ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][Number(tm) - 1]}` : '';
   wrap.append(h('div', { class: 'card slim' },
     h('div', { class: 'row spread' }, h('b', {}, 'Summer journey'), h('span', {}, `${done}/${total} topics`)),
-    progressBar(done, total)));
+    progressBar(done, total),
+    pace ? h('p', { class: 'muted' },
+      pace.needTwo
+        ? `🏁 To finish by ${targetLabel}: ${Math.ceil(pace.perDay)} topics a day (${pace.remaining} to go, ${pace.daysLeft} days).`
+        : `🏁 On track for ${targetLabel}: one topic a day is enough (${pace.remaining} to go).`) : null));
 
   // Backup nudge for the parent (shows only after real usage).
   const needNudge = st.history.length >= 4 &&

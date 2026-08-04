@@ -11,7 +11,8 @@ export function recordAttempt(state, topicId, tier, ok, today, opts = {}) {
 export function completeTopic(state, topicId, correct, total, today) {
   if (!state.completed.includes(topicId)) state.completed.push(topicId);
   const acc = total ? correct / total : 0;
-  const stars = acc >= 0.9 ? 3 : acc >= 0.7 ? 2 : 1;
+  // 0.85 (not 0.9) so one slip in the 7-item ramp still earns 3 stars.
+  const stars = acc >= 0.85 ? 3 : acc >= 0.7 ? 2 : 1;
   state.stars[topicId] = Math.max(state.stars[topicId] ?? 0, stars);
   scheduleAfterSession(state.mastery[topicId], today);
   return stars;

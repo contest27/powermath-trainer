@@ -9,12 +9,13 @@ import {
   completeTopic, rescheduleReviewed, finishSession, applyDiagnostic,
 } from '../engine/progress.js';
 
-export const FOCUS_REVIEW_ITEMS = 8;
+export const FOCUS_REVIEW_ITEMS = 6;
 
-// Build a single-topic session. mode 'new' → explanation + the 11-item ramp;
-// mode 'review' → 8 adaptive-tier items, no explanation. Mirrors buildSession's
-// prompt-dedupe but never appends a review block.
-export function buildFocusSession(state, topicId, mode, today, rng) {
+// Build a single-topic session. mode 'new' → explanation + the 7-item ramp;
+// mode 'review' → 6 adaptive-tier items, no explanation. Mirrors buildSession's
+// prompt-dedupe but never appends a review block. origin decides where Finish
+// returns to: 'map' for station taps, 'today' for the catch-up flow.
+export function buildFocusSession(state, topicId, mode, today, rng, origin = 'map') {
   const t = topicById(topicId);
   const seen = [];
   const gen = (topic, tier) => {
@@ -41,7 +42,7 @@ export function buildFocusSession(state, topicId, mode, today, rng) {
     newTopic: mode === 'new' ? topicId : null,
     focusTopic: topicId,
     focus: true,
-    origin: 'map',
+    origin,
     phase: mode === 'new' ? 'explain' : 'items',
     items, idx: 0,
     results: [],

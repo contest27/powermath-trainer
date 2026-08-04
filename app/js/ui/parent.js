@@ -144,8 +144,15 @@ registerScreen('parent', () => {
   sel.addEventListener('change', () => { st.settings.voiceURI = sel.value || null; store.save(); });
   const rate = h('input', { type: 'range', min: '0.7', max: '1.15', step: '0.05', value: String(st.settings.rate) });
   rate.addEventListener('change', () => { st.settings.rate = Number(rate.value); store.save(); });
+  const target = h('input', { type: 'date', class: 'text-in', value: st.settings.targetDate || '' });
+  target.addEventListener('change', () => {
+    st.settings.targetDate = target.value || '';
+    store.save();
+    toast(target.value ? 'Target date saved' : 'Target date cleared — no catch-up pacing');
+  });
   pers.append(h('label', { class: 'lab' }, 'Voice'), sel,
     h('label', { class: 'lab' }, 'Speaking speed'), rate,
+    h('label', { class: 'lab' }, 'Finish journey by (drives the "one more topic today" catch-up; clear to switch off)'), target,
     h('button', {
       class: 'btn subtle',
       onclick: () => tts.speak('Hello! Three times four makes twelve.', { rate: st.settings.rate, voiceURI: st.settings.voiceURI }),

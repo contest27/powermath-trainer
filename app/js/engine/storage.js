@@ -29,7 +29,9 @@ export function daysBetween(a, b) {
 export function defaultState() {
   return {
     version: 1,
-    settings: { name: '', voiceURI: null, rate: 0.95, apiKey: '' },
+    // targetDate: finish the 32-topic journey by this day (drives catch-up
+    // pacing); parent-editable, clear to switch pacing off.
+    settings: { name: '', voiceURI: null, rate: 0.95, apiKey: '', targetDate: '2026-08-16' },
     streak: { count: 0, lastDay: null },
     mastery: {},      // topicId -> { score, attempts, correct, lastSeen, due, box }
     stars: {},        // topicId -> 1..3
@@ -46,14 +48,23 @@ export function defaultState() {
   };
 }
 
+// Fill any fields added after first release. Top-level assign alone would drop
+// NEW settings keys for existing states (the stored settings object wins), so
+// settings merges one level deep. Exported for tests.
+export function hydrate(s) {
+  const base = defaultState();
+  const merged = Object.assign(base, s);
+  merged.settings = Object.assign(defaultState().settings, s.settings ?? {});
+  return merged;
+}
+
 export function load() {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return defaultState();
     const s = JSON.parse(raw);
     if (!s || s.version !== 1) return defaultState();
-    // Fill any fields added after first release.
-    return Object.assign(defaultState(), s);
+    return hydrate(s);
   } catch {
     return defaultState();
   }
@@ -91,7 +102,7 @@ export function parseImport(text) {
   if (!obj || obj.app !== 'powermath-trainer' || !obj.state || obj.state.version !== 1) {
     throw new Error('Not a PowerMath Trainer backup.');
   }
-  return Object.assign(defaultState(), obj.state);
+  return hydrate(obj.state);
 }
 
 export function wipe() {

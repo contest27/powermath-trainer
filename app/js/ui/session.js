@@ -3,7 +3,7 @@ import {
   headerBar, speakerButton, stripForSpeech, numberPad, fractionPad, orderPicker,
   progressBar, starRow, confettiBurst,
 } from './components.js';
-import { planSession, NEW_TOPIC_TIERS } from '../engine/scheduler.js';
+import { planSession, NEW_TOPIC_TIERS, pacing, nextNewTopic } from '../engine/scheduler.js';
 import { recordAttempt } from '../engine/progress.js';
 import { checkAnswer, answerText } from '../engine/check.js';
 import { dayKey } from '../engine/storage.js';
@@ -72,10 +72,10 @@ export function startOrResume() {
 
 // Launch a one-topic practice from the map. Lives in its own state slot so a
 // half-finished daily lesson in activeSession is never disturbed.
-export function startFocusSession(topicId, mode) {
+export function startFocusSession(topicId, mode, origin = 'map') {
   const today = dayKey();
   const rng = makeRng(seedFromString(today + '|focus|' + topicId + '|' + Date.now()));
-  store.state.focusSession = buildFocusSession(store.state, topicId, mode, today, rng);
+  store.state.focusSession = buildFocusSession(store.state, topicId, mode, today, rng, origin);
   store.save();
   go('session');
 }
@@ -525,6 +525,24 @@ function summaryView(s) {
       card.append(h('p', { class: 'sum-line' }, `Review: ${s.summary.review.ok} of ${s.summary.review.total}`));
     }
     card.append(h('p', { class: 'sum-streak' }, `🔥 Streak: ${store.state.streak.count} day${store.state.streak.count === 1 ? '' : 's'}`));
+  }
+  // Catch-up: when the target date needs more than one topic a day, offer the
+  // next topic right here — one tap, no detour via the map.
+  const pace = pacing(store.state, topicOrder, dayKey());
+  const nextId = nextNewTopic(store.state, topicOrder);
+  if (s.summary.kind !== 'diagnostic' && s.summary.stars != null && pace?.needTwo && nextId) {
+    const nt = topicById(nextId);
+    card.append(
+      h('p', { class: 'sum-line' }, `🏁 ${pace.remaining} topics in ${pace.daysLeft} days — a second one today keeps you on track!`),
+      h('button', {
+        class: 'btn primary wide big',
+        onclick: () => {
+          if (s.focus) store.state.focusSession = null;
+          else store.state.activeSession = null;
+          startFocusSession(nextId, 'new', 'today');
+        },
+      }, `🚀 One more topic: ${nt.emoji} ${nt.shortTitle}`),
+    );
   }
   card.append(h('button', {
     class: 'btn primary wide big',

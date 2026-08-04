@@ -119,7 +119,27 @@ Project-scope memory. Cross-project lessons go to `~/.claude/MEMORY.md`.
   itself / share out). Regression-tested: rotation unit test + distinct
   digit-masked prompt shells across consecutive draws. SW v12.
 
+- **2026-08-04 — Sessions shortened + finish-by-target pacing.** Sebastian:
+  18-question dailies were too long AND the journey could not finish by 16 Aug
+  (one new topic/day is a scheduler hard limit — shortening alone would not
+  have fixed the deadline). Daily is now 7-item ramp [1,1,2,2,2,3,3] + max 4
+  review = 11 questions; REVIEW_ITEMS_ONLY 10; map review 6. Three-star
+  threshold 0.9 → 0.85 so one slip in 7 items keeps 3 stars (old test pins
+  unchanged). New `scheduler.pacing()` off `settings.targetDate` (default
+  2026-08-16, parent-editable, clear = off, past = silent): needTwo when
+  remaining/daysLeft > 1 → today card shows the pace, and after each completed
+  topic the summary offers "🚀 One more topic" (one tap → focus-new for the
+  next topic, origin 'today'). Self-regulating: offer disappears once 1/day
+  suffices. `storage.hydrate()` merges settings one level deep — plain
+  top-level Object.assign would have dropped targetDate for existing states.
+
 ## Learnings
+
+- [LEARN:web] Top-level `Object.assign(defaultState(), stored)` fills new
+  TOP-LEVEL state fields but silently drops new keys inside NESTED objects
+  (the stored `settings` object wins wholesale). Any new settings key needs
+  the nested merge in `storage.hydrate()`. Found 2026-08-04 when adding
+  `settings.targetDate`.
 
 - [LEARN:ui] `Element.append(null)` inserts a **visible text node "null"** —
   native append stringifies non-nodes; only our `h()` helper filters falsy
