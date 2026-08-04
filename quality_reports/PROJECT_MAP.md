@@ -1,6 +1,6 @@
 # PowerMath Trainer — Project Map
 
-**Status:** alles bis Aufgaben-Vielfalt LIVE (sw v12) · kürzere Übungen + Zieldatum-Aufholen gebaut (sw v13, **Commit da, Push ausstehend**) · offen: iPad-Abnahme
+**Status:** alles LIVE inkl. kürzerer Übungen + Zieldatum-Aufholen (sw v13, `02c76e1`, deployt 2026-08-04) · offen: iPad-Abnahme
 **Last updated:** 2026-08-04
 
 ## Recent (updated 2026-08-04)
@@ -14,6 +14,7 @@ löschen = aus) → Today-Karte zeigt das Tempo; nach jedem abgeschlossenen Them
 der Summary-Screen per Ein-Tap „🚀 One more topic" das nächste Thema an, solange die
 Rechnung >1 Thema/Tag verlangt (selbstregulierend). Verifiziert: **133 Tests grün**,
 E2E-Durchlauf (Daily 7+4 → Aufhol-Tap → Thema 2 komplett, 16/32) bei 768×1024.
+**Committet `02c76e1`, gepusht + deployt (sw v13 live auf Pages verifiziert, 2026-08-04).**
 
 0. [[quality_reports/session_logs/2026-08-04_shorter-sessions-target-pacing|📄 Session-Log Kürzere Übungen + Pacing]] — Diagnose (zwei Probleme in einem Satz), Verifikation. **Start hier.**
 0a. [[quality_reports/plans/2026-08-04_shorter-sessions-target-pacing|Plan Kürzere Übungen]] — COMPLETED.
@@ -38,10 +39,11 @@ live auf Pages verifiziert, 2026-08-03).**
 3. [[quality_reports/session_logs/2026-07-25_ai-buddy|KI-Buddy]] (deployt, `a8cf2d7`) · [[quality_reports/session_logs/2026-07-24_streaming-tutor|Streaming-Tutor]] · [[quality_reports/session_logs/2026-07-24_map-practice|Karten-Übung]] · [[quality_reports/session_logs/2026-07-24_treasure-map|Schatzkarte]].
 4. [[MEMORY|Project memory]] — alle Entscheidungen + iOS-Zweistart-Lesson.
 
-**Open for Sebastian (Stand 2026-08-04):** „push" für die Kürzung/Pacing-Release (sw v13)
-geben · **auf dem iPad:** Zweistart-Ritual, dann prüfen: Übung fühlt sich kurz genug an,
-Aufhol-Knopf erscheint, Zieldatum im Parent Corner passt (Default 16.8.) · **weiter offen:**
-Media-Cache-Probe der Watch-Episode (Flugmodus) · Übernahmeliste: Freitags-Challenge.
+**Open for Sebastian (Stand 2026-08-04):** **auf dem iPad:** Zweistart-Ritual, dann prüfen:
+Übung fühlt sich kurz genug an, Aufhol-Knopf erscheint, Zieldatum im Parent Corner passt
+(Default 16.8.; 7+4-Aufgabenzahl ist bei Bedarf in scheduler.js in einer Minute justiert) ·
+**weiter offen:** Media-Cache-Probe der Watch-Episode (Flugmodus) · Übernahmeliste:
+Freitags-Challenge.
 
 <!-- Ältere Recent-Blöcke (Schatzkarte/Watch) siehe Git-History; Trail läuft über die Session-Logs oben. -->
 

@@ -54,6 +54,8 @@ Two separate problems hiding in one sentence:
 
 ## Open
 
-- Push = deploy (needs Sebastian's go), then the iPad second-launch ritual.
+- ~~Push = deploy~~ **Pushed on Sebastian's "push" and verified live: Pages
+  serves sw `pmtrainer-v13` (~40 s after push).** Remaining: the iPad
+  second-launch ritual, then judge session length + catch-up feel there.
 - An in-progress daily from before the update keeps its old 18-item shape
   until finished or abandoned (state carries the items); harmless one-off.
